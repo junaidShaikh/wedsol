@@ -22,7 +22,7 @@ const globalCss = css`
 
   body {
     box-sizing: border-box;
-    font-family: 'PT Serif', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
       'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
     background: var(--main-background-color);
     color: var(--main-text-color);
