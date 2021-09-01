@@ -1,4 +1,5 @@
 import styled from 'styled-components/macro';
+import { useHistory } from 'react-router-dom';
 
 import Container from 'components/common/wrappers/Container';
 import FlexRowWrapper from 'components/common/wrappers/FlexRowWrapper';
@@ -6,6 +7,7 @@ import FlexColumnWrapper from 'components/common/wrappers/FlexColumnWrapper';
 import NftRingPreview from 'components/NftRingPreview';
 import FormInput from 'components/form-elements/FormInput';
 import SolidButton from 'components/common/SolidButton';
+import RingSelect from 'components/form-elements/RingSelect';
 
 const SendNftRingFormWrapper = styled.div`
   width: 100%;
@@ -50,6 +52,8 @@ const SendNftRingFormWrapper = styled.div`
 `;
 
 const SendNftRingForm = (): JSX.Element => {
+  const history = useHistory();
+
   return (
     <SendNftRingFormWrapper>
       <Container>
@@ -59,7 +63,8 @@ const SendNftRingForm = (): JSX.Element => {
               <FormInput placeholder="Your Name" />
               <FormInput placeholder="Your potential spouses name" />
               <FormInput placeholder="Your Message" />
-              <SolidButton>MINT NFT</SolidButton>
+              <RingSelect label="Pick a ring" />
+              <SolidButton onClick={() => history.push('/successful-mint')}>MINT NFT</SolidButton>
             </form>
           </FlexColumnWrapper>
           <FlexColumnWrapper className="col-2">
