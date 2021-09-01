@@ -1,4 +1,5 @@
 import styled from 'styled-components/macro';
+import { useHistory } from 'react-router-dom';
 
 import FlexRowWrapper from './common/wrappers/FlexRowWrapper';
 import FlexColumnWrapper from './common/wrappers/FlexColumnWrapper';
@@ -65,10 +66,12 @@ const ProposalStagesWrapper = styled.div`
 `;
 
 const ProposalStages = (): JSX.Element => {
+  const history = useHistory();
+
   return (
     <ProposalStagesWrapper>
       <FlexRowWrapper>
-        <FlexColumnWrapper>
+        <FlexColumnWrapper onClick={() => history.push('send-nft-ring')}>
           <FlexRowWrapper>
             <img src={sendARing} alt="" className="send-a-ring-image" />
             <div>
