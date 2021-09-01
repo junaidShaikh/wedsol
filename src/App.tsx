@@ -8,16 +8,21 @@ import Footer from 'components/Footer';
 
 import Landing from 'containers/Landing';
 
+const Proposal = React.lazy(() => import('containers/Proposal'));
+
 const App = () => {
   return (
     <React.Fragment>
       <GlobalStyles />
       <Navbar />
-      <Router>
-        <Switch>
-          <Route exact path="/" component={Landing} />
-        </Switch>
-      </Router>
+      <React.Suspense fallback={null}>
+        <Router>
+          <Switch>
+            <Route exact path="/" component={Landing} />
+            <Route exact path="/proposal" component={Proposal} />
+          </Switch>
+        </Router>
+      </React.Suspense>
       <Footer />
     </React.Fragment>
   );
