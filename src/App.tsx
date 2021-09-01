@@ -12,6 +12,7 @@ import Landing from 'containers/Landing';
 
 const Proposal = React.lazy(() => import('containers/Proposal'));
 const SendNFTRing = React.lazy(() => import('containers/SendNFTRing'));
+const SuccessfullyMinted = React.lazy(() => import('containers/SuccessfullyMinted'));
 
 const App = () => {
   return (
@@ -25,6 +26,7 @@ const App = () => {
             <Route exact path="/" component={Landing} />
             <ProtectedRoute exact path="/proposal" component={Proposal} />
             <ProtectedRoute exact path="/send-nft-ring" component={SendNFTRing} />
+            <ProtectedRoute exact path="/successful-mint" component={SuccessfullyMinted} />
           </Switch>
         </Router>
       </React.Suspense>
