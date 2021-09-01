@@ -1,7 +1,7 @@
 import styled from 'styled-components/macro';
 
-import SectionTitle from 'components/common/SectionTitle';
 import ConnectedAccountPill from 'components/ConnectedAccountPill';
+import SectionTitle from 'components/common/SectionTitle';
 import ProposalStages from 'components/ProposalStages';
 
 const ProposalWrapper = styled.main`
