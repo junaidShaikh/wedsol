@@ -1,7 +1,9 @@
 import styled from 'styled-components/macro';
 import clsx from 'clsx';
+import { useSnapshot } from 'valtio';
 import { BiChevronDown } from 'react-icons/bi';
 
+import { state } from 'state';
 import shortenWalletAddress from 'utils/shortenWalletAddress';
 
 import accountPlaceholder from 'assets/images/account-placeholder.png';
@@ -49,10 +51,12 @@ interface ConnectedAccountPillProps {
 }
 
 const ConnectedAccountPill = ({ className }: ConnectedAccountPillProps): JSX.Element => {
+  const snap = useSnapshot(state);
+
   return (
     <ConnectedAccountPillWrapper className={clsx(className)}>
       <img src={accountPlaceholder} alt="" className="account-image" />
-      <p>{shortenWalletAddress('FnPXxM4KsAbakgtAkXYVSvuQ8Pmv5b5eeP3APTPM6fhd', 10)}</p>
+      <p>{shortenWalletAddress(snap.walletAddress, 10)}</p>
       <BiChevronDown />
     </ConnectedAccountPillWrapper>
   );
