@@ -11,6 +11,7 @@ import Phantom from 'components/Phantom';
 import Landing from 'containers/Landing';
 
 const Proposal = React.lazy(() => import('containers/Proposal'));
+const SendNFTRing = React.lazy(() => import('containers/SendNFTRing'));
 
 const App = () => {
   return (
@@ -23,6 +24,7 @@ const App = () => {
           <Switch>
             <Route exact path="/" component={Landing} />
             <ProtectedRoute exact path="/proposal" component={Proposal} />
+            <ProtectedRoute exact path="/send-nft-ring" component={SendNFTRing} />
           </Switch>
         </Router>
       </React.Suspense>
