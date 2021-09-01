@@ -1,6 +1,8 @@
 import styled from 'styled-components/macro';
 import clsx from 'clsx';
 
+import { getProvider } from 'utils/getProvider';
+
 import phantomLogo from 'assets/logos/phantom.png';
 
 const ConnectWalletButtonWrapper = styled.button`
@@ -36,8 +38,15 @@ interface ConnectWalletButtonProps {
 }
 
 const ConnectWalletButton = ({ className }: ConnectWalletButtonProps): JSX.Element => {
+  const provider = getProvider();
+
   return (
-    <ConnectWalletButtonWrapper className={clsx(className)}>
+    <ConnectWalletButtonWrapper
+      className={clsx(className)}
+      onClick={() => {
+        provider?.connect();
+      }}
+    >
       <img className="phantom-logo" src={phantomLogo} alt="" /> Connect Wallet
     </ConnectWalletButtonWrapper>
   );
