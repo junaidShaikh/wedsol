@@ -27,9 +27,9 @@ const Phantom = (): null => {
       // try to eagerly connect
       // provider.connect({ onlyIfTrusted: true });
 
-      return () => {
-        provider.disconnect();
-      };
+      // return () => {
+      //   provider.disconnect();
+      // };
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [provider]);
