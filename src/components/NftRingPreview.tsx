@@ -4,7 +4,7 @@ import QRCode from 'react-qr-code';
 import FlexColumnWrapper from './common/wrappers/FlexColumnWrapper';
 import FlexRowWrapper from './common/wrappers/FlexRowWrapper';
 
-import previewRing1 from 'assets/images/preview-ring-1.png';
+import rings from './common/rings';
 
 const NftRingPreviewWrapper = styled.div`
   width: 100%;
@@ -101,32 +101,27 @@ const NftRingPreviewWrapper = styled.div`
 
 interface NftRingPreviewProps {
   proposerName?: string;
-  spouseName?: string;
-  ring?: string;
-  message?: string;
+  spouseName: string;
+  ring: number;
+  message: string;
 }
 
-const text =
+const placeholderText =
   'Amet minim mollit non deserunt ullamco est sit aliqua dolor do amet sint. Velit officia consequat duis enim velit mollit. Exercitation veniam consequat sunt nostrud amet.';
 
-const NftRingPreview = ({
-  proposerName = '',
-  spouseName = 'Priyanka',
-  ring = previewRing1,
-  message = text,
-}: NftRingPreviewProps): JSX.Element => {
+const NftRingPreview = ({ proposerName, spouseName, ring, message }: NftRingPreviewProps): JSX.Element => {
   return (
     <NftRingPreviewWrapper>
       <FlexColumnWrapper>
         <FlexRowWrapper className="row-1">
-          <h3>Dear {spouseName}</h3>
+          <h3>Dear {spouseName || 'Jane'}</h3>
         </FlexRowWrapper>
         <FlexRowWrapper className="row-2">
           <FlexColumnWrapper>
-            <img src={ring} alt="" />
+            <img src={rings?.[ring ?? 0]} alt="" />
           </FlexColumnWrapper>
           <FlexColumnWrapper>
-            <p>{message}</p>
+            <p>{message || placeholderText}</p>
           </FlexColumnWrapper>
         </FlexRowWrapper>
         <FlexRowWrapper className="row-3">

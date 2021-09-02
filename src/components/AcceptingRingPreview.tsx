@@ -4,6 +4,8 @@ import QRCode from 'react-qr-code';
 import FlexColumnWrapper from './common/wrappers/FlexColumnWrapper';
 import FlexRowWrapper from './common/wrappers/FlexRowWrapper';
 
+import rings from './common/rings';
+
 const AcceptingRingPreviewWrapper = styled.div`
   width: 100%;
   max-width: 517px;
@@ -58,8 +60,8 @@ const AcceptingRingPreviewWrapper = styled.div`
 interface AcceptingRingPreviewProps {
   proposerName: string;
   spouseName: string;
-  ring1: string;
-  ring2: string;
+  ring1: number;
+  ring2: number;
   qrCodeString: string;
 }
 
@@ -80,10 +82,10 @@ const AcceptingRingPreview = ({
         </FlexRowWrapper>
         <FlexRowWrapper className="row-2">
           <FlexColumnWrapper>
-            <img src={ring1} alt="" />
+            <img src={rings[ring1 ?? 0]} alt="" />
           </FlexColumnWrapper>
           <FlexColumnWrapper>
-            <img src={ring2} alt="" />
+            <img src={rings[ring2 ?? 0]} alt="" />
           </FlexColumnWrapper>
         </FlexRowWrapper>
         <FlexRowWrapper className="row-3">
