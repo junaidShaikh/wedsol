@@ -68,7 +68,7 @@ const SuccessfullyMinted = (): JSX.Element => {
             </div>
           </FlexColumnWrapper>
           <FlexColumnWrapper>
-            <NftRingPreview />
+            <NftRingPreview spouseName={''} message={''} ring={0} />
           </FlexColumnWrapper>
         </FlexRowWrapper>
       </Container>
