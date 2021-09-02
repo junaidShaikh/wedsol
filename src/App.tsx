@@ -19,6 +19,10 @@ const Engagement = React.lazy(() => import('containers/Engagement'));
 
 const StartNewMarriage = React.lazy(() => import('containers/StartNewMarriage'));
 const Marriage = React.lazy(() => import('containers/Marriage'));
+const Assets = React.lazy(() => import('containers/Assets'));
+const AddAsset = React.lazy(() => import('containers/AddAsset'));
+const ApproveAsset = React.lazy(() => import('containers/ApproveAsset'));
+const Divorce = React.lazy(() => import('containers/Divorce'));
 
 const App = () => {
   return (
@@ -39,6 +43,10 @@ const App = () => {
 
             <Route exact path="/start-new-marriage" component={StartNewMarriage} />
             <Route exact path="/marriage" component={Marriage} />
+            <Route exact path="/assets" component={Assets} />
+            <Route exact path="/add-asset" component={AddAsset} />
+            <Route exact path="/approve-asset" component={ApproveAsset} />
+            <Route exact path="/divorce" component={Divorce} />
           </Switch>
           <Footer />
         </Router>
