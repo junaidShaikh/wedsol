@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import { useHistory } from 'react-router-dom';
 import { FaWallet } from 'react-icons/fa';
 import { MdContentCopy } from 'react-icons/md';
+import { AiOutlineDelete } from 'react-icons/ai';
 
 import FlexColumnWrapper from './common/wrappers/FlexColumnWrapper';
 import FlexRowWrapper from './common/wrappers/FlexRowWrapper';
@@ -113,6 +114,12 @@ const MarriageInfoCardWrapper = styled.div`
     height: 35px;
     text-transform: uppercase;
 
+    margin-bottom: 12px;
+
+    &:last-of-type {
+      margin-bottom: 0;
+    }
+
     font-size: 13px;
     line-height: 16px;
     letter-spacing: 0.085em;
@@ -127,13 +134,25 @@ const MarriageInfoCardWrapper = styled.div`
       left: 12px;
     }
   }
+
+  .red {
+    background: crimson;
+    color: #ffffff;
+    font-weight: 600;
+  }
 `;
 
 interface MarriageInfoCardProps {
   className?: string;
+  showBlessButton?: boolean;
+  showFileDivorceButton?: boolean;
 }
 
-const MarriageInfoCard = ({ className }: MarriageInfoCardProps): JSX.Element => {
+const MarriageInfoCard = ({
+  className,
+  showBlessButton = true,
+  showFileDivorceButton = true,
+}: MarriageInfoCardProps): JSX.Element => {
   const history = useHistory();
 
   return (
@@ -150,10 +169,18 @@ const MarriageInfoCard = ({ className }: MarriageInfoCardProps): JSX.Element => 
         </FlexRowWrapper>
       </FlexColumnWrapper>
       <ViewOnExplorer className="view-on-explorer" onClick={() => history.push('/assets')} />
-      <SolidButton className="solid-button">
-        <FaWallet />
-        Send $SOL to Bless
-      </SolidButton>
+      {showBlessButton ? (
+        <SolidButton className="solid-button">
+          <FaWallet />
+          Send $SOL to Bless
+        </SolidButton>
+      ) : null}
+      {showFileDivorceButton ? (
+        <SolidButton className="solid-button red" onClick={() => history.push('/add-assets')}>
+          <AiOutlineDelete />
+          File for divorce
+        </SolidButton>
+      ) : null}
     </MarriageInfoCardWrapper>
   );
 };
