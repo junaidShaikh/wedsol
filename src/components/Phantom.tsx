@@ -15,7 +15,7 @@ const Phantom = (): null => {
         state.isWalletConnected = true;
         state.walletAddress = provider.publicKey?.toBase58() ?? '';
         state.autoApprove = provider.autoApprove ?? false;
-        history.push('/proposal');
+        // history.push('/proposal');
       });
 
       provider.on('disconnect', () => {
