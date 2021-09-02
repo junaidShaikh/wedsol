@@ -4,6 +4,8 @@ import { FaCheckCircle } from 'react-icons/fa';
 
 import FlexRowWrapper from 'components/common/wrappers/FlexRowWrapper';
 
+import rings from 'components/common/rings';
+
 const RingSelectWrapper = styled.div`
   width: 100%;
   margin-top: 24px;
@@ -22,7 +24,7 @@ const RingSelectWrapper = styled.div`
     width: 74px;
     height: 74px;
 
-    background: #ececec;
+    background-color: #ececec;
     border-radius: 4px;
     margin-right: 12px;
 
@@ -30,6 +32,17 @@ const RingSelectWrapper = styled.div`
     place-items: center;
 
     cursor: pointer;
+    position: relative;
+
+    img {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+    }
+
+    svg {
+      z-index: 10;
+    }
 
     &:last-of-type {
       margin-right: 0;
@@ -39,23 +52,31 @@ const RingSelectWrapper = styled.div`
 
 interface RingSelectProps {
   label?: string;
+  defaultValue?: number;
+  onChange: (value: number) => void;
 }
 
-const RingSelect = ({ label }: RingSelectProps): JSX.Element => {
-  const [selectedRing, setSelectedRing] = React.useState(1);
+const RingSelect = ({ label, defaultValue, onChange }: RingSelectProps): JSX.Element => {
+  const [selectedRing, setSelectedRing] = React.useState(defaultValue ?? 0);
 
   return (
     <RingSelectWrapper>
       {label ? <label>{label}</label> : null}
       <FlexRowWrapper>
-        {new Array(5).fill(0).map((_, i) => (
+        {rings.map((ring: string, i) => (
           <div
             className="ring-wrapper"
             key={i}
-            onClick={() => setSelectedRing(i + 1)}
-            style={{ border: selectedRing === i + 1 ? '1px solid black' : '1px solid transparent' }}
+            onClick={() => {
+              setSelectedRing(i);
+              onChange(i);
+            }}
+            style={{
+              border: selectedRing === i ? '1px solid black' : '1px solid transparent',
+            }}
           >
-            {selectedRing === i + 1 ? <FaCheckCircle /> : null}
+            <img src={ring} alt="" style={{ opacity: selectedRing === i ? 0.3 : 1 }} />
+            {selectedRing === i ? <FaCheckCircle /> : null}
           </div>
         ))}
       </FlexRowWrapper>
