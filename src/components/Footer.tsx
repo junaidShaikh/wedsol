@@ -6,7 +6,7 @@ import poweredBySolana from 'assets/logos/powered-by-solana.png';
 
 const FooterWrapper = styled.footer`
   width: 100%;
-  height: 120px;
+  height: 60px;
 
   position: fixed;
   bottom: 0;
@@ -18,7 +18,7 @@ const FooterWrapper = styled.footer`
     width: 100%;
     height: 100%;
 
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
 
     .powered-by-solana {
