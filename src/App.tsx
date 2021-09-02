@@ -17,6 +17,9 @@ const AcceptRingRequest = React.lazy(() => import('containers/AcceptRingRequest'
 const AcceptingRing = React.lazy(() => import('containers/AcceptingRing'));
 const Engagement = React.lazy(() => import('containers/Engagement'));
 
+const StartNewMarriage = React.lazy(() => import('containers/StartNewMarriage'));
+const Marriage = React.lazy(() => import('containers/Marriage'));
+
 const App = () => {
   return (
     <React.Fragment>
@@ -33,6 +36,9 @@ const App = () => {
             <Route exact path="/accept-ring-request" component={AcceptRingRequest} />
             <ProtectedRoute exact path="/accepting-ring" component={AcceptingRing} />
             <Route exact path="/engagement" component={Engagement} />
+
+            <Route exact path="/start-new-marriage" component={StartNewMarriage} />
+            <Route exact path="/marriage" component={Marriage} />
           </Switch>
           <Footer />
         </Router>
