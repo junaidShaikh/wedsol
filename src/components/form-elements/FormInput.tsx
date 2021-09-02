@@ -1,3 +1,4 @@
+import * as React from 'react';
 import styled from 'styled-components/macro';
 
 const Input = styled.input`
@@ -30,8 +31,10 @@ const Input = styled.input`
   }
 `;
 
-const FormInput = (props: React.InputHTMLAttributes<HTMLInputElement>): JSX.Element => {
-  return <Input {...props} />;
-};
+const FormInput = React.forwardRef<HTMLInputElement, React.InputHTMLAttributes<HTMLInputElement>>(
+  (props, ref): JSX.Element => {
+    return <Input {...props} ref={ref} />;
+  }
+);
 
 export default FormInput;
