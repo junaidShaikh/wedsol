@@ -1,5 +1,6 @@
 import styled from 'styled-components/macro';
 import clsx from 'clsx';
+import { useHistory } from 'react-router-dom';
 import { FaWallet } from 'react-icons/fa';
 import { MdContentCopy } from 'react-icons/md';
 
@@ -133,6 +134,8 @@ interface MarriageInfoCardProps {
 }
 
 const MarriageInfoCard = ({ className }: MarriageInfoCardProps): JSX.Element => {
+  const history = useHistory();
+
   return (
     <MarriageInfoCardWrapper className={clsx(className)}>
       <CopyText className="copy-text" text="app.wedsol.com/proposal/1" />
@@ -146,7 +149,7 @@ const MarriageInfoCard = ({ className }: MarriageInfoCardProps): JSX.Element => 
           <p>{shortenWalletAddress('FnPXxM4KsAbakgtAkXYVSvuQ8Pmv5b5eeP3APTPM6fhd', 10)}</p>
         </FlexRowWrapper>
       </FlexColumnWrapper>
-      <ViewOnExplorer className="view-on-explorer" href="/" />
+      <ViewOnExplorer className="view-on-explorer" onClick={() => history.push('/assets')} />
       <SolidButton className="solid-button">
         <FaWallet />
         Send $SOL to Bless
