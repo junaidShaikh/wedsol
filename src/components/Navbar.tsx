@@ -17,6 +17,8 @@ const NavbarWrapper = styled.nav`
   left: 0;
   right: 0;
 
+  z-index: 10;
+
   & > ${FlexRowWrapper} {
     width: 100%;
     height: 100%;
