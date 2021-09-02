@@ -1,8 +1,8 @@
 import styled from 'styled-components/macro';
-import { useHistory } from 'react-router-dom';
 
 import ConnectedAccountPill from 'components/ConnectedAccountPill';
 import SectionTitle from 'components/common/SectionTitle';
+import ApproveAssetForm from 'components/forms/ApproveAssetForm';
 
 const ApproveAssetWrapper = styled.main`
   width: 100%;
@@ -26,19 +26,11 @@ const ApproveAssetWrapper = styled.main`
 `;
 
 const ApproveAsset = (): JSX.Element => {
-  const history = useHistory();
-
   return (
     <ApproveAssetWrapper>
       <ConnectedAccountPill className="connected-account-pill" />
       <SectionTitle className="section-title">Approve An Asset</SectionTitle>
-      <button
-        onClick={() => {
-          history.push('/divorce');
-        }}
-      >
-        Next
-      </button>
+      <ApproveAssetForm />
     </ApproveAssetWrapper>
   );
 };
