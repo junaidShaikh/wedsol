@@ -1,4 +1,5 @@
 import styled from 'styled-components/macro';
+import { Link } from 'react-router-dom';
 
 import FlexRowWrapper from 'components/common/wrappers/FlexRowWrapper';
 
@@ -23,6 +24,13 @@ const NavbarWrapper = styled.nav`
     align-items: center;
     justify-content: center;
 
+    a {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-decoration: none;
+    }
+
     .wedsol-logo {
       width: 22px;
       height: 22px;
@@ -46,8 +54,10 @@ const Navbar = (): JSX.Element => {
   return (
     <NavbarWrapper>
       <FlexRowWrapper>
-        <img className="wedsol-logo" src={wedSolLogo} alt="wedsol" />
-        <p>WEDSOL</p>
+        <Link to="/">
+          <img className="wedsol-logo" src={wedSolLogo} alt="wedsol" />
+          <p>WEDSOL</p>
+        </Link>
       </FlexRowWrapper>
     </NavbarWrapper>
   );
