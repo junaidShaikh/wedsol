@@ -1,4 +1,5 @@
 import styled from 'styled-components/macro';
+import { useHistory } from 'react-router-dom';
 
 import ConnectedAccountPill from 'components/ConnectedAccountPill';
 import SectionTitle from 'components/common/SectionTitle';
@@ -46,6 +47,8 @@ const SuccessfullyMintedWrapper = styled.main`
 `;
 
 const SuccessfullyMinted = (): JSX.Element => {
+  const history = useHistory();
+
   return (
     <SuccessfullyMintedWrapper>
       <ConnectedAccountPill className="connected-account-pill" />
@@ -56,7 +59,11 @@ const SuccessfullyMinted = (): JSX.Element => {
             <div style={{ width: '100%', maxWidth: 455, margin: '0 auto' }}>
               <CopyText className="copy-text" text="app.wedsol.com/proposal/1" />
               <BlockConfirmations className="block-confirmations" confirmedBlocks={190} totalBlocks={290} />
-              <ViewOnExplorer href="https://google.com" target="_blank" />
+              <ViewOnExplorer
+                onClick={() => {
+                  history.push('/accept-ring-request');
+                }}
+              />
             </div>
           </FlexColumnWrapper>
           <FlexColumnWrapper>
