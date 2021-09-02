@@ -6,16 +6,17 @@ import ProposalStages from 'components/ProposalStages';
 
 const ProposalWrapper = styled.main`
   width: 100%;
-  height: 100vh;
+  min-height: 100vh;
 
   display: flex;
   justify-content: center;
   align-items: center;
   flex-direction: column;
 
+  padding: 60px 0 160px 0;
+
   .connected-account-pill {
-    position: fixed;
-    top: 120px;
+    margin-bottom: 20px;
   }
 
   .section-title {
