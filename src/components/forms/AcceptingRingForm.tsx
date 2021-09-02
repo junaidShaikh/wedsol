@@ -1,5 +1,8 @@
 import styled from 'styled-components/macro';
 import { useHistory } from 'react-router-dom';
+import { useForm, Controller } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as Yup from 'yup';
 
 import Container from 'components/common/wrappers/Container';
 import FlexRowWrapper from 'components/common/wrappers/FlexRowWrapper';
@@ -8,8 +11,13 @@ import AcceptingRingPreview from 'components/AcceptingRingPreview';
 import SolidButton from 'components/common/SolidButton';
 import RingSelect from 'components/form-elements/RingSelect';
 
-import previewRing1 from 'assets/images/preview-ring-1.png';
-import previewRing2 from 'assets/images/preview-ring-2.png';
+const defaultValues = {
+  ring: 0,
+};
+
+const validationSchema = Yup.object({
+  ring: Yup.number().positive().integer().required(),
+}).required();
 
 const AcceptingRingFormWrapper = styled.div`
   width: 100%;
@@ -74,17 +82,33 @@ interface AcceptingRingFormProps {
 }
 
 const AcceptingRingForm = ({ proposerName, spouseName, qrCodeString }: AcceptingRingFormProps): JSX.Element => {
+  const { control, watch, handleSubmit, setValue } = useForm({
+    defaultValues,
+    resolver: yupResolver(validationSchema),
+  });
+  const formValues = watch(['ring']);
+
   const history = useHistory();
+
+  const onSubmit = (d: any) => {
+    console.log(d);
+    history.push('/successful-mint');
+  };
+
   return (
     <AcceptingRingFormWrapper>
       <Container>
         <FlexRowWrapper>
           <FlexColumnWrapper className="col-1">
-            <form>
+            <form onSubmit={handleSubmit(onSubmit)}>
               <h2>
                 Choose a Ring for <span>{proposerName}</span>
               </h2>
-              <RingSelect label="Pick a ring" />
+              <Controller
+                control={control}
+                name="ring"
+                render={() => <RingSelect label="Pick a ring" onChange={(value) => setValue('ring', value)} />}
+              />
               <SolidButton onClick={() => history.push('/engagement')}>MINT AND ACCEPT</SolidButton>
             </form>
           </FlexColumnWrapper>
@@ -93,8 +117,8 @@ const AcceptingRingForm = ({ proposerName, spouseName, qrCodeString }: Accepting
             <AcceptingRingPreview
               proposerName={proposerName}
               spouseName={spouseName}
-              ring1={previewRing1}
-              ring2={previewRing2}
+              ring1={0}
+              ring2={formValues[0]}
               qrCodeString="Hello World"
             />
           </FlexColumnWrapper>
