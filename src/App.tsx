@@ -41,12 +41,12 @@ const App = () => {
             <ProtectedRoute exact path="/accepting-ring" component={AcceptingRing} />
             <Route exact path="/engagement" component={Engagement} />
 
-            <Route exact path="/start-new-marriage" component={StartNewMarriage} />
-            <Route exact path="/marriage" component={Marriage} />
-            <Route exact path="/assets" component={Assets} />
-            <Route exact path="/add-asset" component={AddAsset} />
-            <Route exact path="/approve-asset" component={ApproveAsset} />
-            <Route exact path="/divorce" component={Divorce} />
+            <ProtectedRoute exact path="/start-new-marriage" component={StartNewMarriage} />
+            <ProtectedRoute exact path="/marriage" component={Marriage} />
+            <ProtectedRoute exact path="/assets" component={Assets} />
+            <ProtectedRoute exact path="/add-asset" component={AddAsset} />
+            <ProtectedRoute exact path="/approve-asset" component={ApproveAsset} />
+            <ProtectedRoute exact path="/divorce" component={Divorce} />
           </Switch>
           <Footer />
         </Router>
