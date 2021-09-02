@@ -21,10 +21,10 @@ const App = () => {
   return (
     <React.Fragment>
       <GlobalStyles />
-      <Navbar />
       <React.Suspense fallback={null}>
         <Router>
           <Phantom />
+          <Navbar />
           <Switch>
             <Route exact path="/" component={Landing} />
             <ProtectedRoute exact path="/proposal" component={Proposal} />
@@ -34,9 +34,9 @@ const App = () => {
             <ProtectedRoute exact path="/accepting-ring" component={AcceptingRing} />
             <Route exact path="/engagement" component={Engagement} />
           </Switch>
+          <Footer />
         </Router>
       </React.Suspense>
-      <Footer />
     </React.Fragment>
   );
 };
