@@ -1,13 +1,31 @@
 import styled from 'styled-components/macro';
 import { useHistory } from 'react-router-dom';
+import { useForm, Controller } from 'react-hook-form';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as Yup from 'yup';
 
 import Container from 'components/common/wrappers/Container';
 import FlexRowWrapper from 'components/common/wrappers/FlexRowWrapper';
 import FlexColumnWrapper from 'components/common/wrappers/FlexColumnWrapper';
 import NftRingPreview from 'components/NftRingPreview';
 import FormInput from 'components/form-elements/FormInput';
+import FormTextArea from 'components/form-elements/FormTextArea';
 import SolidButton from 'components/common/SolidButton';
 import RingSelect from 'components/form-elements/RingSelect';
+
+const defaultValues = {
+  proposerName: '',
+  spouseName: '',
+  message: '',
+  ring: 0,
+};
+
+const validationSchema = Yup.object({
+  proposerName: Yup.string().required(),
+  spouseName: Yup.string().required(),
+  message: Yup.string().required(),
+  ring: Yup.number().positive().integer().required(),
+}).required();
 
 const SendNftRingFormWrapper = styled.div`
   width: 100%;
@@ -52,24 +70,39 @@ const SendNftRingFormWrapper = styled.div`
 `;
 
 const SendNftRingForm = (): JSX.Element => {
+  const { control, register, watch, handleSubmit, setValue } = useForm({
+    defaultValues,
+    resolver: yupResolver(validationSchema),
+  });
+  const formValues = watch(['spouseName', 'message', 'ring']);
+
   const history = useHistory();
+
+  const onSubmit = (d: any) => {
+    console.log(d);
+    history.push('/successful-mint');
+  };
 
   return (
     <SendNftRingFormWrapper>
       <Container>
         <FlexRowWrapper>
           <FlexColumnWrapper className="col-1">
-            <form>
-              <FormInput placeholder="Your Name" />
-              <FormInput placeholder="Your potential spouses name" />
-              <FormInput placeholder="Your Message" />
-              <RingSelect label="Pick a ring" />
-              <SolidButton onClick={() => history.push('/successful-mint')}>MINT NFT</SolidButton>
+            <form onSubmit={handleSubmit(onSubmit)}>
+              <FormInput placeholder="Your Name" {...register('proposerName')} />
+              <FormInput placeholder="Your potential spouses name" {...register('spouseName')} />
+              <FormTextArea placeholder="Your Message" {...register('message')} />
+              <Controller
+                control={control}
+                name="ring"
+                render={() => <RingSelect label="Pick a ring" onChange={(value) => setValue('ring', value)} />}
+              />
+              <SolidButton type="submit">MINT NFT</SolidButton>
             </form>
           </FlexColumnWrapper>
           <FlexColumnWrapper className="col-2">
             <h4>Preview</h4>
-            <NftRingPreview />
+            <NftRingPreview spouseName={formValues[0]} message={formValues[1]} ring={formValues[2]} />
           </FlexColumnWrapper>
         </FlexRowWrapper>
       </Container>
