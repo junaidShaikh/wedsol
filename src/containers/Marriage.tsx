@@ -126,7 +126,7 @@ const Marriage = (): JSX.Element => {
                 <IoLogoFacebook />
               </a>
             </FlexRowWrapper>
-            <MarriageInfoCard className="marriage-info-card" />
+            <MarriageInfoCard className="marriage-info-card" showFileDivorceButton={false} />
             <BlessedByCard
               blessings={[
                 {
