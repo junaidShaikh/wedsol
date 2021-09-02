@@ -1,6 +1,7 @@
 import styled from 'styled-components/macro';
 import clsx from 'clsx';
 
+import { state } from 'state';
 import { getProvider } from 'utils/getProvider';
 
 import phantomLogo from 'assets/logos/phantom.png';
@@ -38,13 +39,23 @@ interface ConnectWalletButtonProps {
 }
 
 const ConnectWalletButton = ({ className }: ConnectWalletButtonProps): JSX.Element => {
-  const provider = getProvider();
-
   return (
     <ConnectWalletButtonWrapper
       className={clsx(className)}
       onClick={() => {
-        provider?.connect();
+        const provider = getProvider();
+        if (!provider) {
+          window.location.href = 'https://phantom.app';
+        }
+        provider
+          ?.connect()
+          .then(() => {
+            console.log('connected');
+            state.isWalletConnected = true;
+            state.walletAddress = provider.publicKey?.toBase58() ?? '';
+            state.autoApprove = provider.autoApprove ?? false;
+          })
+          .catch((err) => console.log(err));
       }}
     >
       <img className="phantom-logo" src={phantomLogo} alt="" /> Connect Wallet
