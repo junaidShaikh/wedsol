@@ -57,8 +57,8 @@ const Navbar = (): JSX.Element => {
     <NavbarWrapper>
       <FlexRowWrapper>
         <Link to="/">
-          <img className="wedsol-logo" src={wedSolLogo} alt="wedsol" />
-          <p>WEDSOL</p>
+          <img className="wedsol-logo" src={wedSolLogo} alt="CHAINWED" />
+          <p>CHAINWED</p>
         </Link>
       </FlexRowWrapper>
     </NavbarWrapper>
