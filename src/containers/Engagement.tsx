@@ -6,8 +6,7 @@ import FlexColumnWrapper from 'components/common/wrappers/FlexColumnWrapper';
 import FlexRowWrapper from 'components/common/wrappers/FlexRowWrapper';
 import EngagementCard from 'components/EngagementCard';
 
-import previewRing1 from 'assets/images/preview-ring-1.png';
-import previewRing2 from 'assets/images/preview-ring-2.png';
+import rings from 'components/common/rings';
 
 const EngagementWrapper = styled.main`
   width: 100%;
@@ -69,8 +68,8 @@ const Engagement = (): JSX.Element => {
               proposerName="Rahul"
               spouseName="Priyanka"
               engagementDate={Date().toString()}
-              proposerRing={previewRing1}
-              spouseRing={previewRing2}
+              proposerRing={rings[0]}
+              spouseRing={rings[1]}
               signedBy={['Rahul Kumar', 'Priyanka Bedi']}
               qrCodeString="Hello World"
             />

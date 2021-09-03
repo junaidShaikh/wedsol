@@ -4,7 +4,7 @@ import ConnectedAccountPill from 'components/ConnectedAccountPill';
 import Container from 'components/common/wrappers/Container';
 import AcceptRingRequestCard from 'components/AcceptRingRequestCard';
 
-import previewRing1 from 'assets/images/preview-ring-1.png';
+import rings from 'components/common/rings';
 
 const AcceptRingRequestWrapper = styled.main`
   width: 100%;
@@ -34,7 +34,7 @@ const AcceptRingRequest = (): JSX.Element => {
         <AcceptRingRequestCard
           proposerName="Rahul"
           spouseName="Priyanka"
-          proposerRing={previewRing1}
+          proposerRing={rings[0]}
           message={
             'Amet minim mollit non deserunt ullamco est sit aliqua dolor do amet sint. Velit officia consequat duis enim velit mollit. Exercitation veniam consequat sunt nostrud amet.'
           }
