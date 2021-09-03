@@ -15,6 +15,7 @@ import ProposalLink from 'components/ProposalLink';
 import SignerCard from 'components/SignerCard';
 
 const defaultValues = {
+  images: [] as string[],
   assetName: '',
   assetDescription: '',
   assetValue: '',
@@ -24,6 +25,7 @@ const defaultValues = {
 };
 
 const validationSchema = Yup.object({
+  images: Yup.array().of(Yup.string()).min(0).max(5).required(),
   assetName: Yup.string().required(),
   assetDescription: Yup.string().required(),
   assetValue: Yup.number().positive().integer().required(),
@@ -101,7 +103,7 @@ const AddAssetFormWrapper = styled.div`
 `;
 
 const AddAssetForm = (): JSX.Element => {
-  const { register, watch, handleSubmit } = useForm({
+  const { register, watch, handleSubmit, setValue } = useForm({
     defaultValues,
     resolver: yupResolver(validationSchema),
   });
@@ -121,7 +123,11 @@ const AddAssetForm = (): JSX.Element => {
         <FlexRowWrapper>
           <FlexColumnWrapper className="col-1">
             <form onSubmit={handleSubmit(onSubmit)}>
-              <AddImages label="Add Images" className="add-images" />
+              <AddImages
+                label="Add Images"
+                className="add-images"
+                onNewImage={(imageUrls: string[]) => setValue('images', imageUrls)}
+              />
               <FormInput placeholder="Asset Name" {...register('assetName')} />
               <FormTextArea placeholder="Asset Description" {...register('assetDescription')} />
               <FormInput type="number" placeholder="Asset Value" {...register('assetValue')} />
