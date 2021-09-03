@@ -3,6 +3,7 @@ import { useHistory } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
+import { format } from 'date-fns';
 
 import Container from 'components/common/wrappers/Container';
 import FlexRowWrapper from 'components/common/wrappers/FlexRowWrapper';
@@ -13,7 +14,7 @@ import FormTextArea from 'components/form-elements/FormTextArea';
 import SolidButton from 'components/common/SolidButton';
 
 const defaultValues = {
-  marriageDate: '',
+  marriageDate: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
   proposerName: '',
   spouseName: '',
   proposerVows: '',
@@ -71,10 +72,11 @@ const MarriageFormWrapper = styled.div`
 `;
 
 const MarriageForm = (): JSX.Element => {
-  const { register, handleSubmit } = useForm({
+  const { register, watch, handleSubmit } = useForm({
     defaultValues,
     resolver: yupResolver(validationSchema),
   });
+  const formValues = watch();
 
   const history = useHistory();
 
@@ -101,7 +103,14 @@ const MarriageForm = (): JSX.Element => {
           </FlexColumnWrapper>
           <FlexColumnWrapper className="col-2">
             <h4>Preview</h4>
-            <MarriagePreview qrCodeString="Hello World" />
+            <MarriagePreview
+              proposerName={formValues.proposerName}
+              spouseName={formValues.spouseName}
+              engagementDate={formValues.marriageDate}
+              proposerVows={formValues.proposerVows}
+              spouseVows={formValues.spouseVows}
+              qrCodeString="Hello World"
+            />
           </FlexColumnWrapper>
         </FlexRowWrapper>
       </Container>
