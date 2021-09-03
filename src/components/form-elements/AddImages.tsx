@@ -1,5 +1,6 @@
 import * as React from 'react';
 import styled from 'styled-components/macro';
+import clsx from 'clsx';
 import { FaPlus } from 'react-icons/fa';
 
 import FlexRowWrapper from 'components/common/wrappers/FlexRowWrapper';
@@ -38,14 +39,15 @@ const AddImagesWrapper = styled.div`
 `;
 
 interface AddImagesProps {
+  className?: string;
   label?: string;
 }
 
-const AddImages = ({ label }: AddImagesProps): JSX.Element => {
+const AddImages = ({ className, label }: AddImagesProps): JSX.Element => {
   const [selectedRing, setSelectedRing] = React.useState(1);
 
   return (
-    <AddImagesWrapper>
+    <AddImagesWrapper className={clsx(className)}>
       {label ? <label>{label}</label> : null}
       <FlexRowWrapper>
         {new Array(5).fill(0).map((_, i) => (
