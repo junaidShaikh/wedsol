@@ -114,7 +114,7 @@ const NftRingPreview = ({ proposerName, spouseName, ring, message }: NftRingPrev
     <NftRingPreviewWrapper>
       <FlexColumnWrapper>
         <FlexRowWrapper className="row-1">
-          <h3>Dear {spouseName || 'Jane'}</h3>
+          <h3>Dear {spouseName || 'Priyanka'}</h3>
         </FlexRowWrapper>
         <FlexRowWrapper className="row-2">
           <FlexColumnWrapper>
