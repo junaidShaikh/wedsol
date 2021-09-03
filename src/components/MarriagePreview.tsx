@@ -1,8 +1,10 @@
 import styled from 'styled-components/macro';
-
+import clsx from 'clsx';
+import { format } from 'date-fns';
 import QRCode from 'react-qr-code';
 
 import FlexColumnWrapper from './common/wrappers/FlexColumnWrapper';
+import FlexRowWrapper from 'components/common/wrappers/FlexRowWrapper';
 
 const MarriagePreviewWrapper = styled.div`
   width: 100%;
@@ -14,24 +16,151 @@ const MarriagePreviewWrapper = styled.div`
   box-shadow: 0px 4px 18px rgba(0, 0, 0, 0.16);
   border-radius: 11px;
 
-  padding: 50px 44px 40px 44px;
+  padding: 50px 32px 40px 32px;
+  position: relative;
+
+  .qr-wrapper {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+  }
 
   & > ${FlexColumnWrapper} {
-    min-height: 281px;
-    align-items: flex-end;
-    justify-content: flex-end;
+    & > ${FlexRowWrapper} {
+      justify-content: center;
+
+      &.row-1 {
+        margin-bottom: 4px;
+
+        h2 {
+          font-family: var(--prata);
+          font-weight: normal;
+          font-size: 24px;
+
+          color: rgba(0, 0, 0, 0.5);
+        }
+      }
+
+      &.row-2 {
+        margin-bottom: 12px;
+
+        h1 {
+          font-family: var(--prata);
+          font-weight: normal;
+          font-size: 31px;
+          line-height: 42px;
+          text-align: center;
+
+          color: #000000;
+        }
+      }
+
+      &.row-3 {
+        margin-bottom: 24px;
+
+        p {
+          font-family: var(--prata);
+          font-weight: normal;
+          font-size: 18px;
+          line-height: 26px;
+
+          color: rgba(0, 0, 0, 0.42);
+        }
+      }
+
+      &.row-4 {
+        margin-bottom: 32px;
+
+        p {
+          font-family: var(--prata);
+          font-weight: normal;
+          font-size: 22px;
+
+          color: rgba(0, 0, 0, 0.42);
+        }
+      }
+
+      &.row-5 {
+        h5 {
+          font-weight: 500;
+          font-size: 18px;
+          line-height: 23px;
+          text-transform: uppercase;
+
+          color: #6d6d6f;
+          margin-bottom: 12px;
+        }
+
+        p {
+          max-width: 200px;
+
+          font-family: var(--prata);
+          font-weight: normal;
+          font-size: 16px;
+          line-height: 24px;
+
+          color: rgba(0, 0, 0, 0.37);
+        }
+      }
+    }
   }
 `;
 
 interface MarriagePreviewProps {
+  className?: string;
+  proposerName: string;
+  spouseName: string;
+  engagementDate: string;
+  proposerVows: string;
+  spouseVows: string;
   qrCodeString: string;
 }
 
-const MarriagePreview = ({ qrCodeString }: MarriagePreviewProps): JSX.Element => {
+const MarriagePreview = ({
+  className,
+  proposerName,
+  spouseName,
+  engagementDate,
+  proposerVows,
+  spouseVows,
+  qrCodeString,
+}: MarriagePreviewProps): JSX.Element => {
   return (
-    <MarriagePreviewWrapper>
+    <MarriagePreviewWrapper className={clsx(className)}>
       <FlexColumnWrapper>
-        <QRCode size={64} value={qrCodeString} />
+        <div className="qr-wrapper">
+          <QRCode size={64} value={qrCodeString} />
+        </div>
+        <FlexRowWrapper className="row-1">
+          <h2>Marriage Certificate</h2>
+        </FlexRowWrapper>
+        <FlexRowWrapper className="row-2">
+          <h1>
+            {proposerName || 'Rahul'} & {spouseName || 'Priyanka'}
+          </h1>
+        </FlexRowWrapper>
+        <FlexRowWrapper className="row-3">
+          <p>engaged on {format(new Date(engagementDate ?? Date().toString()), 'dd/MM/yyyy')}</p>
+        </FlexRowWrapper>
+        <FlexRowWrapper className="row-4">
+          <p>In accordance of the following vows</p>
+        </FlexRowWrapper>
+        <FlexRowWrapper className="row-5">
+          <FlexColumnWrapper>
+            <h5>{proposerName || 'Rahul'}'s vows</h5>
+            <p>
+              {proposerVows ||
+                'Amet minim mollit non deserunt ullamco est sit aliqua dolor do amet sint. Velit officia consequat duis enim velit mollit. Exercitation veniam consequat sunt nostrud amet.'}
+            </p>
+          </FlexColumnWrapper>
+          <FlexColumnWrapper>
+            <h5>{spouseName || 'Priyanka'}'s vows</h5>
+            <p>
+              {spouseVows ||
+                'Amet minim mollit non deserunt ullamco est sit aliqua dolor do amet sint. Velit officia consequat duis enim velit mollit. Exercitation veniam consequat sunt nostrud amet.'}
+            </p>
+          </FlexColumnWrapper>
+        </FlexRowWrapper>
       </FlexColumnWrapper>
     </MarriagePreviewWrapper>
   );
