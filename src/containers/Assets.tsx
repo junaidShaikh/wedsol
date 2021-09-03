@@ -158,7 +158,7 @@ const Assets = (): JSX.Element => {
           </FlexColumnWrapper>
           <FlexColumnWrapper className="col-2">
             <p className="current-contract">Current Contract</p>
-            <MarriageInfoCard className="marriage-info-card" showFileDivorceButton={false} />
+            <MarriageInfoCard className="marriage-info-card" showBlessButton={false} showFileDivorceButton={true} />
           </FlexColumnWrapper>
         </FlexRowWrapper>
       </Container>
