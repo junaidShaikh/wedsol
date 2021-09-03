@@ -34,7 +34,7 @@ const TextArea = styled.textarea`
 
 const FormTextArea = React.forwardRef<HTMLTextAreaElement, React.TextareaHTMLAttributes<HTMLTextAreaElement>>(
   (props, ref): JSX.Element => {
-    return <TextArea {...props} ref={ref} />;
+    return <TextArea {...props} ref={ref} autoComplete="off" />;
   }
 );
 
