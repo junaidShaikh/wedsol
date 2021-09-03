@@ -13,13 +13,13 @@ import ProposalLink from 'components/ProposalLink';
 import SignerCard from 'components/SignerCard';
 
 const defaultValues = {
-  percentageSplit: '',
-  percentageIncaseOfDivorce: '',
+  percentageSplit: null,
+  percentageIncaseOfDivorce: null,
 };
 
 const validationSchema = Yup.object({
-  percentageSplit: Yup.string().required(),
-  percentageIncaseOfDivorce: Yup.string().required(),
+  percentageSplit: Yup.number().positive().integer().min(0).max(100).required(),
+  percentageIncaseOfDivorce: Yup.number().positive().integer().min(0).max(100).required(),
 }).required();
 
 const ApproveAssetFormWrapper = styled.div`
@@ -132,6 +132,23 @@ const ApproveAssetFormWrapper = styled.div`
       width: 100%;
       max-width: 455px;
 
+      .percentage-input-wrapper {
+        position: relative;
+
+        p {
+          position: absolute;
+          top: 50%;
+          right: 32px;
+          transform: translateY(-80%);
+
+          font-weight: 500;
+          font-size: 18px;
+          line-height: 22px;
+
+          color: #000000;
+        }
+      }
+
       button {
         margin-top: 45px;
       }
@@ -161,10 +178,12 @@ const ApproveAssetFormWrapper = styled.div`
 `;
 
 const ApproveAssetForm = (): JSX.Element => {
-  const { register, handleSubmit } = useForm({
+  const { register, watch, handleSubmit } = useForm({
     defaultValues,
     resolver: yupResolver(validationSchema),
   });
+
+  const [percentageSplit, percentageIncaseOfDivorce] = watch(['percentageSplit', 'percentageIncaseOfDivorce']);
 
   const history = useHistory();
 
@@ -207,20 +226,36 @@ const ApproveAssetForm = (): JSX.Element => {
                   </p>
                 </FlexRowWrapper>
               </FlexColumnWrapper>
-              <FormInput
-                type="number"
-                min={0}
-                max={100}
-                placeholder="Percentage Split"
-                {...register('percentageSplit')}
-              />
-              <FormInput
-                type="number"
-                min={0}
-                max={100}
-                placeholder="Percentage Incase of Divorce"
-                {...register('percentageIncaseOfDivorce')}
-              />
+              <FlexRowWrapper className="percentage-input-wrapper">
+                <FormInput
+                  type="number"
+                  step={1}
+                  min={0}
+                  max={100}
+                  placeholder="Percentage Split"
+                  {...register('percentageSplit')}
+                />
+                {percentageSplit ? (
+                  <p>
+                    {percentageSplit}% : {100 - percentageSplit}%
+                  </p>
+                ) : null}
+              </FlexRowWrapper>
+              <FlexRowWrapper className="percentage-input-wrapper">
+                <FormInput
+                  type="number"
+                  step={1}
+                  min={0}
+                  max={100}
+                  placeholder="Percentage Incase of Divorce"
+                  {...register('percentageIncaseOfDivorce')}
+                />
+                {percentageIncaseOfDivorce ? (
+                  <p>
+                    {percentageIncaseOfDivorce}% : {100 - percentageIncaseOfDivorce}%
+                  </p>
+                ) : null}
+              </FlexRowWrapper>
               <SolidButton type="submit">SIGN ASSET</SolidButton>
             </form>
           </FlexColumnWrapper>
