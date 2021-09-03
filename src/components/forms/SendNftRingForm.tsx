@@ -3,6 +3,15 @@ import { useHistory } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
+import {
+  Connection,
+  PublicKey,
+  TransactionInstruction,
+  Transaction,
+  SystemProgram,
+  clusterApiUrl,
+} from '@solana/web3.js';
+import { Buffer } from 'buffer';
 
 import Container from 'components/common/wrappers/Container';
 import FlexRowWrapper from 'components/common/wrappers/FlexRowWrapper';
@@ -12,6 +21,14 @@ import FormInput from 'components/form-elements/FormInput';
 import FormTextArea from 'components/form-elements/FormTextArea';
 import SolidButton from 'components/common/SolidButton';
 import RingSelect from 'components/form-elements/RingSelect';
+
+import rings from 'components/common/rings';
+
+import { getProvider } from 'utils/getProvider';
+import { uploadJsonToIpfs } from 'apis/ipfs';
+import config from 'config';
+
+const NETWORK = clusterApiUrl('devnet');
 
 const defaultValues = {
   proposerName: '',
@@ -78,9 +95,97 @@ const SendNftRingForm = (): JSX.Element => {
 
   const history = useHistory();
 
-  const onSubmit = (d: any) => {
+  const connection = new Connection(NETWORK);
+
+  const onSubmit = async (d: typeof defaultValues) => {
     console.log(d);
-    history.push('/successful-mint');
+    // history.push('/successful-mint');
+
+    // TODO Upload JSON to IPFS and get IPFS CID
+    const { data } = await uploadJsonToIpfs({ ...d, ring: rings[d.ring] });
+
+    if (data) {
+      console.log(data);
+    }
+
+    const provider = getProvider();
+
+    if (!provider?.publicKey) return;
+
+    const programIdPublicKey = new PublicKey(config.programId);
+
+    const programPubKey = await PublicKey.createWithSeed(provider.publicKey as PublicKey, 'hello', programIdPublicKey);
+    const lamports = await connection.getMinimumBalanceForRentExemption(5 * 1024 * 1024);
+    let transaction = new Transaction().add(
+      SystemProgram.createAccountWithSeed({
+        fromPubkey: provider.publicKey,
+        basePubkey: provider.publicKey,
+        seed: 'hello',
+        newAccountPubkey: programPubKey,
+        lamports,
+        space: 5 * 1024 * 1024,
+        programId: programIdPublicKey,
+      })
+    );
+    transaction.feePayer = provider.publicKey;
+    console.log('Getting recent blockhash');
+    (transaction as any).recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+    if (transaction) {
+      try {
+        let signed = await provider.signTransaction(transaction);
+        console.log('Got signature, submitting transaction');
+        let signature = await connection.sendRawTransaction(signed.serialize());
+        console.log('Submitted transaction ' + signature + ', awaiting confirmation');
+        await connection.confirmTransaction(signature);
+        console.log('Transaction ' + signature + ' confirmed');
+      } catch (err: any) {
+        console.warn(err);
+        if (err?.code === 4001 && err?.message === 'User rejected the request.') {
+          alert(err.message);
+        }
+      }
+    }
+
+    const proposalData = Buffer.alloc(64);
+    proposalData[0] = 0;
+    proposalData.fill(data.cid, 1);
+
+    const instruction = new TransactionInstruction({
+      keys: [
+        {
+          pubkey: provider.publicKey as PublicKey,
+          isSigner: true,
+          isWritable: false,
+        },
+        {
+          pubkey: programPubKey,
+          isSigner: false,
+          isWritable: true,
+        },
+      ],
+      programId: programIdPublicKey,
+      data: proposalData,
+    });
+    transaction = new Transaction().add(instruction);
+    transaction.feePayer = provider.publicKey;
+    console.log('Getting recent blockhash');
+    (transaction as any).recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+    if (transaction) {
+      try {
+        let signed = await provider.signTransaction(transaction);
+        console.log('Got signature, submitting transaction');
+        let signature = await connection.sendRawTransaction(signed.serialize());
+        console.log('Submitted transaction ' + signature + ', awaiting confirmation');
+        await connection.confirmTransaction(signature);
+        console.log('Transaction ' + signature + ' confirmed');
+        history.push('/successful-mint');
+      } catch (err: any) {
+        console.warn(err);
+        if (err?.code === 4001 && err?.message === 'User rejected the request.') {
+          alert(err.message);
+        }
+      }
+    }
   };
 
   return (
