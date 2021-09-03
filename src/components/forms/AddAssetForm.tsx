@@ -51,6 +51,10 @@ const AddAssetFormWrapper = styled.div`
       width: 100%;
       max-width: 455px;
 
+      .add-images {
+        margin-bottom: 32px;
+      }
+
       button {
         margin-top: 45px;
       }
@@ -98,7 +102,7 @@ const AddAssetForm = (): JSX.Element => {
         <FlexRowWrapper>
           <FlexColumnWrapper className="col-1">
             <form onSubmit={handleSubmit(onSubmit)}>
-              <AddImages label="Add Images" />
+              <AddImages label="Add Images" className="add-images" />
               <FormInput placeholder="Asset Name" {...register('assetName')} />
               <FormTextArea placeholder="Asset Description" {...register('assetDescription')} />
               <FormInput type="number" placeholder="Asset Value" {...register('assetValue')} />
