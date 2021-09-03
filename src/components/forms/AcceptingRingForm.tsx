@@ -1,6 +1,6 @@
 import styled from 'styled-components/macro';
 import { useHistory } from 'react-router-dom';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
 
@@ -82,7 +82,7 @@ interface AcceptingRingFormProps {
 }
 
 const AcceptingRingForm = ({ proposerName, spouseName, qrCodeString }: AcceptingRingFormProps): JSX.Element => {
-  const { control, watch, handleSubmit, setValue } = useForm({
+  const { watch, handleSubmit, setValue } = useForm({
     defaultValues,
     resolver: yupResolver(validationSchema),
   });
@@ -92,7 +92,7 @@ const AcceptingRingForm = ({ proposerName, spouseName, qrCodeString }: Accepting
 
   const onSubmit = (d: any) => {
     console.log(d);
-    history.push('/successful-mint');
+    history.push('/engagement');
   };
 
   return (
@@ -104,12 +104,8 @@ const AcceptingRingForm = ({ proposerName, spouseName, qrCodeString }: Accepting
               <h2>
                 Choose a Ring for <span>{proposerName}</span>
               </h2>
-              <Controller
-                control={control}
-                name="ring"
-                render={() => <RingSelect label="Pick a ring" onChange={(value) => setValue('ring', value)} />}
-              />
-              <SolidButton onClick={() => history.push('/engagement')}>MINT AND ACCEPT</SolidButton>
+              <RingSelect label="Pick a ring" onChange={(value) => setValue('ring', value)} />
+              <SolidButton type="submit">MINT AND ACCEPT</SolidButton>
             </form>
           </FlexColumnWrapper>
           <FlexColumnWrapper className="col-2">

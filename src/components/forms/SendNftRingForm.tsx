@@ -1,6 +1,6 @@
 import styled from 'styled-components/macro';
 import { useHistory } from 'react-router-dom';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
 
@@ -70,7 +70,7 @@ const SendNftRingFormWrapper = styled.div`
 `;
 
 const SendNftRingForm = (): JSX.Element => {
-  const { control, register, watch, handleSubmit, setValue } = useForm({
+  const { register, watch, handleSubmit, setValue } = useForm({
     defaultValues,
     resolver: yupResolver(validationSchema),
   });
@@ -92,11 +92,7 @@ const SendNftRingForm = (): JSX.Element => {
               <FormInput placeholder="Your Name" {...register('proposerName')} />
               <FormInput placeholder="Your potential spouses name" {...register('spouseName')} />
               <FormTextArea placeholder="Your Message" {...register('message')} />
-              <Controller
-                control={control}
-                name="ring"
-                render={() => <RingSelect label="Pick a ring" onChange={(value) => setValue('ring', value)} />}
-              />
+              <RingSelect label="Pick a ring" onChange={(value) => setValue('ring', value)} />
               <SolidButton type="submit">MINT NFT</SolidButton>
             </form>
           </FlexColumnWrapper>
