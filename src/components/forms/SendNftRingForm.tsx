@@ -115,7 +115,7 @@ const SendNftRingForm = (): JSX.Element => {
     const programIdPublicKey = new PublicKey(config.programId);
 
     const programPubKey = await PublicKey.createWithSeed(provider.publicKey as PublicKey, 'hello', programIdPublicKey);
-    const lamports = await connection.getMinimumBalanceForRentExemption(5 * 1024 * 1024);
+    const lamports = await connection.getMinimumBalanceForRentExemption(15 * 1024);
     let transaction = new Transaction().add(
       SystemProgram.createAccountWithSeed({
         fromPubkey: provider.publicKey,
@@ -123,7 +123,7 @@ const SendNftRingForm = (): JSX.Element => {
         seed: 'hello',
         newAccountPubkey: programPubKey,
         lamports,
-        space: 5 * 1024 * 1024,
+        space: 15 * 1024,
         programId: programIdPublicKey,
       })
     );
