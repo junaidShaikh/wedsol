@@ -107,8 +107,9 @@ const DivorceForm = (): JSX.Element => {
                 assetValue="$1.5M"
                 assetOwnershipPercentage="50:50"
               />
-
-              <SolidButton onClick={() => history.push('/')}>SIGN AND DIVORCE</SolidButton>
+              <SolidButton type="button" onClick={() => history.push('/')}>
+                SIGN AND DIVORCE
+              </SolidButton>
             </form>
           </FlexColumnWrapper>
           <FlexColumnWrapper className="col-2">
