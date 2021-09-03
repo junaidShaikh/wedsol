@@ -176,7 +176,7 @@ const MarriageInfoCard = ({
         </SolidButton>
       ) : null}
       {showFileDivorceButton ? (
-        <SolidButton className="solid-button red" onClick={() => history.push('/add-assets')}>
+        <SolidButton className="solid-button red" onClick={() => history.push('/divorce')}>
           <AiOutlineDelete />
           File for divorce
         </SolidButton>
