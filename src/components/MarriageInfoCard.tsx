@@ -157,7 +157,7 @@ const MarriageInfoCard = ({
 
   return (
     <MarriageInfoCardWrapper className={clsx(className)}>
-      <CopyText className="copy-text" text="app.wedsol.com/proposal/1" />
+      <CopyText className="copy-text" text="app.chainwed.com/proposal/1" />
       <BlockConfirmations className="block-confirmations" confirmedBlocks={190} totalBlocks={290} />
       <FlexColumnWrapper>
         <FlexRowWrapper>

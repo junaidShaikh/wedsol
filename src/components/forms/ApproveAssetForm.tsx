@@ -261,7 +261,7 @@ const ApproveAssetForm = (): JSX.Element => {
           </FlexColumnWrapper>
           <FlexColumnWrapper className="col-2">
             <Container>
-              <ProposalLink link="app.wedsol.com/proposal/1" />
+              <ProposalLink link="app.chainwed.com/proposal/1" />
               <h4>Signed By</h4>
               <SignerCard
                 signerName="Rahul Kumar"

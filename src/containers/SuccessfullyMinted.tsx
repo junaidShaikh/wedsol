@@ -58,7 +58,7 @@ const SuccessfullyMinted = (): JSX.Element => {
         <FlexRowWrapper>
           <FlexColumnWrapper>
             <div style={{ width: '100%', maxWidth: 455, margin: '0 auto' }}>
-              <CopyText className="copy-text" text="app.wedsol.com/proposal/1" />
+              <CopyText className="copy-text" text="app.chainwed.com/proposal/1" />
               <BlockConfirmations className="block-confirmations" confirmedBlocks={190} totalBlocks={290} />
               <ViewOnExplorer
                 onClick={() => {
