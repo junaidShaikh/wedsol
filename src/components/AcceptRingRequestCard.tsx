@@ -166,6 +166,7 @@ const AcceptRingRequestCardWrapper = styled.div`
 
 interface AcceptRingRequestCardProps {
   className?: string;
+  proposalPubKey: string;
   proposerName: string;
   spouseName: string;
   proposerRing: string;
@@ -176,6 +177,7 @@ interface AcceptRingRequestCardProps {
 
 const AcceptRingRequestCard = ({
   className,
+  proposalPubKey,
   proposerName,
   spouseName,
   proposerRing,
@@ -206,7 +208,7 @@ const AcceptRingRequestCard = ({
             <SolidButton
               className="accept-ring-button"
               onClick={() => {
-                history.push('/proposal/:proposalPubKey/accepting');
+                history.push(`/proposal/${proposalPubKey}/accepting`);
               }}
             >
               Accept Ring
@@ -221,12 +223,14 @@ const AcceptRingRequestCard = ({
               <p className="signed-by">Signed By</p>
             </FlexRowWrapper>
             <FlexRowWrapper>
-              {signedBy.map((signer, i) => (
-                <FlexRowWrapper key={i} className="signer">
-                  <img src={accountPlaceholder} alt="" />
-                  <p>{signer}</p>
-                </FlexRowWrapper>
-              ))}
+              {signedBy
+                .filter((signer) => Boolean(signer))
+                .map((signer, i) => (
+                  <FlexRowWrapper key={i} className="signer">
+                    <img src={accountPlaceholder} alt="" />
+                    <p>{signer}</p>
+                  </FlexRowWrapper>
+                ))}
             </FlexRowWrapper>
           </FlexColumnWrapper>
           <FlexColumnWrapper>
