@@ -1,5 +1,6 @@
+import * as React from 'react';
 import styled from 'styled-components/macro';
-import { useHistory } from 'react-router-dom';
+import { useHistory, useParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
@@ -11,12 +12,14 @@ import AcceptingRingPreview from 'components/AcceptingRingPreview';
 import SolidButton from 'components/common/SolidButton';
 import RingSelect from 'components/form-elements/RingSelect';
 
+import rings from 'components/common/rings';
+
 const defaultValues = {
-  ring: 0,
+  spouseRing: 0,
 };
 
 const validationSchema = Yup.object({
-  ring: Yup.number().positive().integer().required(),
+  spouseRing: Yup.number().required(),
 }).required();
 
 const AcceptingRingFormWrapper = styled.div`
@@ -78,21 +81,36 @@ const AcceptingRingFormWrapper = styled.div`
 interface AcceptingRingFormProps {
   proposerName: string;
   spouseName: string;
+  proposerRing: string;
   qrCodeString: string;
 }
 
-const AcceptingRingForm = ({ proposerName, spouseName, qrCodeString }: AcceptingRingFormProps): JSX.Element => {
+const AcceptingRingForm = ({
+  proposerName,
+  spouseName,
+  proposerRing,
+  qrCodeString,
+}: AcceptingRingFormProps): JSX.Element => {
+  const { proposalPubKey } = useParams<{ proposalPubKey: string }>();
+
   const { watch, handleSubmit, setValue } = useForm({
     defaultValues,
     resolver: yupResolver(validationSchema),
   });
-  const formValues = watch(['ring']);
+  const formValues = watch(['spouseRing']);
 
   const history = useHistory();
 
+  React.useEffect(() => {
+    if (!proposalPubKey) {
+      history.replace('/');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const onSubmit = (d: any) => {
     console.log(d);
-    history.push('/engagement');
+    history.push(`/engagement/${proposalPubKey}`);
   };
 
   return (
@@ -104,7 +122,7 @@ const AcceptingRingForm = ({ proposerName, spouseName, qrCodeString }: Accepting
               <h2>
                 Choose a Ring for <span>{proposerName}</span>
               </h2>
-              <RingSelect label="Pick a ring" onChange={(value) => setValue('ring', value)} />
+              <RingSelect label="Pick a ring" onChange={(value) => setValue('spouseRing', value)} />
               <SolidButton type="submit">MINT AND ACCEPT</SolidButton>
             </form>
           </FlexColumnWrapper>
@@ -113,9 +131,9 @@ const AcceptingRingForm = ({ proposerName, spouseName, qrCodeString }: Accepting
             <AcceptingRingPreview
               proposerName={proposerName}
               spouseName={spouseName}
-              ring1={0}
-              ring2={formValues[0]}
-              qrCodeString="Hello World"
+              proposerRing={proposerRing || rings[0]}
+              spouseRing={rings[formValues[0]]}
+              qrCodeString={qrCodeString}
             />
           </FlexColumnWrapper>
         </FlexRowWrapper>
