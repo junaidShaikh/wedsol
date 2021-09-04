@@ -178,12 +178,14 @@ const EngagementCard = ({
               <p className="signed-by">Signed By</p>
             </FlexRowWrapper>
             <FlexRowWrapper>
-              {signedBy.map((signer, i) => (
-                <FlexRowWrapper key={i} className="signer">
-                  <img src={accountPlaceholder} alt="" />
-                  <p>{signer}</p>
-                </FlexRowWrapper>
-              ))}
+              {signedBy
+                .filter((signer) => Boolean(signer))
+                .map((signer, i) => (
+                  <FlexRowWrapper key={i} className="signer">
+                    <img src={accountPlaceholder} alt="" />
+                    <p>{signer}</p>
+                  </FlexRowWrapper>
+                ))}
             </FlexRowWrapper>
           </FlexColumnWrapper>
           <FlexColumnWrapper>
