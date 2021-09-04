@@ -1,5 +1,8 @@
+import * as React from 'react';
 import styled from 'styled-components/macro';
-import { useHistory } from 'react-router-dom';
+import { useParams, useHistory, useLocation } from 'react-router-dom';
+
+import config from 'config';
 
 import ConnectedAccountPill from 'components/ConnectedAccountPill';
 import SectionTitle from 'components/common/SectionTitle';
@@ -48,7 +51,18 @@ const SuccessfullyMintedWrapper = styled.main`
 `;
 
 const SuccessfullyMinted = (): JSX.Element => {
+  const { proposalPubKey } = useParams<{ proposalPubKey: string }>();
+
   const history = useHistory();
+
+  const location = useLocation<{ proposalTransaction: string; spouseName: string; message: string; ring: number }>();
+
+  React.useEffect(() => {
+    if (!proposalPubKey) {
+      history.replace('/');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <SuccessfullyMintedWrapper>
@@ -58,17 +72,25 @@ const SuccessfullyMinted = (): JSX.Element => {
         <FlexRowWrapper>
           <FlexColumnWrapper>
             <div style={{ width: '100%', maxWidth: 455, margin: '0 auto' }}>
-              <CopyText className="copy-text" text="app.chainwed.com/proposal/1" />
-              <BlockConfirmations className="block-confirmations" confirmedBlocks={190} totalBlocks={290} />
+              <CopyText className="copy-text" text={`${window.location.origin}/proposal/${proposalPubKey}/accept`} />
+              <BlockConfirmations
+                className="block-confirmations"
+                confirmedBlocks={Math.ceil(Math.random() * 290)}
+                totalBlocks={290}
+              />
               <ViewOnExplorer
-                onClick={() => {
-                  history.push('/accept-ring-request');
-                }}
+                href={config.generateSolanaExplorerBaseUrl(location.state.proposalTransaction)}
+                target="_blank"
+                rel="noopener noreferrer"
               />
             </div>
           </FlexColumnWrapper>
           <FlexColumnWrapper>
-            <NftRingPreview spouseName={''} message={''} ring={0} />
+            <NftRingPreview
+              spouseName={location.state?.spouseName}
+              message={location.state?.message}
+              ring={location.state?.ring}
+            />
           </FlexColumnWrapper>
         </FlexRowWrapper>
       </Container>
