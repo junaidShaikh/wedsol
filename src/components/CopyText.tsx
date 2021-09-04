@@ -9,7 +9,7 @@ import FlexRowWrapper from 'components/common/wrappers/FlexRowWrapper';
 
 const CopyTextWrapper = styled.div`
   width: 100%;
-  height: 50px;
+  min-height: 50px;
 
   ${FlexRowWrapper} {
     align-items: center;
@@ -19,10 +19,12 @@ const CopyTextWrapper = styled.div`
     border-bottom: 1px solid #bbbbbb;
 
     p {
-      font-weight: 500;
-      font-size: 18px;
+      max-width: 90%;
+      font-weight: 400;
+      font-size: 16px;
       line-height: 22px;
-      color: rgba(6, 6, 6, 0.4);
+      color: rgba(6, 6, 6, 0.6);
+      word-wrap: break-word;
     }
 
     button {
