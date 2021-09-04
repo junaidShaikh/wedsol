@@ -19,8 +19,11 @@ interface State {
     data: {
       message: string;
       proposerName: string;
-      ring: string;
       spouseName: string;
+      proposerRing: string;
+      spouseRing: string;
+      signers: string[];
+      engagementDate: string;
     } | null;
   };
 }
