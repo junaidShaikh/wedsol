@@ -6,9 +6,6 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
 import { PublicKey, TransactionInstruction, Transaction, SystemProgram } from '@solana/web3.js';
 import { Buffer } from 'buffer';
-import { useSnapshot } from 'valtio';
-
-import { state } from 'state';
 
 import Container from 'components/common/wrappers/Container';
 import FlexRowWrapper from 'components/common/wrappers/FlexRowWrapper';
@@ -25,6 +22,7 @@ import rings from 'components/common/rings';
 import { getProvider } from 'utils/getProvider';
 import { uploadJsonToIpfs } from 'apis/ipfs';
 import config from 'config';
+import getConnection from 'utils/getConnection';
 
 const defaultValues = {
   proposerName: '',
@@ -104,7 +102,7 @@ const SendNftRingForm = (): JSX.Element => {
 
   const history = useHistory();
 
-  const snap = useSnapshot(state);
+  const connection = getConnection();
 
   const onSubmit = async (d: typeof defaultValues) => {
     try {
@@ -128,7 +126,7 @@ const SendNftRingForm = (): JSX.Element => {
           'hello',
           programIdPublicKey
         );
-        const lamports = await snap.connection.getMinimumBalanceForRentExemption(15 * 1024);
+        const lamports = await connection.getMinimumBalanceForRentExemption(15 * 1024);
         let transaction = new Transaction().add(
           SystemProgram.createAccountWithSeed({
             fromPubkey: provider.publicKey,
@@ -142,13 +140,13 @@ const SendNftRingForm = (): JSX.Element => {
         );
         transaction.feePayer = provider.publicKey;
         console.log('Getting recent blockhash');
-        (transaction as any).recentBlockhash = (await snap.connection.getRecentBlockhash()).blockhash;
+        (transaction as any).recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
         if (transaction) {
           let signed = await provider.signTransaction(transaction);
           console.log('Got signature, submitting transaction');
-          let signature = await snap.connection.sendRawTransaction(signed.serialize());
+          let signature = await connection.sendRawTransaction(signed.serialize());
           console.log('Submitted transaction ' + signature + ', awaiting confirmation');
-          await snap.connection.confirmTransaction(signature);
+          await connection.confirmTransaction(signature);
           console.log('Transaction ' + signature + ' confirmed');
         }
 
@@ -175,13 +173,13 @@ const SendNftRingForm = (): JSX.Element => {
         transaction = new Transaction().add(instruction);
         transaction.feePayer = provider.publicKey;
         console.log('Getting recent blockhash');
-        (transaction as any).recentBlockhash = (await snap.connection.getRecentBlockhash()).blockhash;
+        (transaction as any).recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
         if (transaction) {
           let signed = await provider.signTransaction(transaction);
           console.log('Got signature, submitting transaction');
-          let signature = await snap.connection.sendRawTransaction(signed.serialize());
+          let signature = await connection.sendRawTransaction(signed.serialize());
           console.log('Submitted transaction ' + signature + ', awaiting confirmation');
-          await snap.connection.confirmTransaction(signature);
+          await connection.confirmTransaction(signature);
           console.log('Transaction ' + signature + ' confirmed');
           history.push({
             pathname: `/proposal/${programPubKey.toBase58()}/created`,

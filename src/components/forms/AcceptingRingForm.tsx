@@ -23,6 +23,7 @@ import rings from 'components/common/rings';
 import { getProvider } from 'utils/getProvider';
 import { uploadJsonToIpfs } from 'apis/ipfs';
 import config from 'config';
+import getConnection from 'utils/getConnection';
 
 const defaultValues = {
   spouseRing: 0,
@@ -124,7 +125,9 @@ const AcceptingRingForm = ({
 
   const history = useHistory();
 
-  const { connection, proposalInfo } = useSnapshot(state);
+  const { proposalInfo } = useSnapshot(state);
+
+  const connection = getConnection();
 
   React.useEffect(() => {
     if (!proposalPubKey) {
@@ -151,8 +154,8 @@ const AcceptingRingForm = ({
 
         const programIdPublicKey = new PublicKey(config.programId);
 
-        let weddingData = '';
-        weddingData += '\x04';
+        const weddingData = Buffer.alloc(64);
+        weddingData[0] = 1;
 
         const instruction = new TransactionInstruction({
           keys: [
@@ -168,7 +171,7 @@ const AcceptingRingForm = ({
             },
           ],
           programId: programIdPublicKey,
-          data: Buffer.from(weddingData, 'utf-8'),
+          data: weddingData,
         });
         const transaction = new Transaction().add(instruction);
         transaction.feePayer = provider.publicKey;
@@ -179,8 +182,7 @@ const AcceptingRingForm = ({
           console.log('Got signature, submitting transaction');
           let signature = await connection.sendRawTransaction(signed.serialize());
           console.log('Submitted transaction ' + signature + ', awaiting confirmation');
-          // ! This line throws error and will not allow program to execute further.
-          // await connection.confirmTransaction(signature);
+          await connection.confirmTransaction(signature);
           console.log('Transaction ' + signature + ' confirmed');
           history.push({
             pathname: `/engagement/${proposalPubKey}`,

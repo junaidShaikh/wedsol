@@ -19,6 +19,7 @@ import FullPageSpinner from 'components/common/FullPageSpinner';
 import rings from 'components/common/rings';
 
 import shortenWalletAddress from 'utils/shortenWalletAddress';
+import getConnection from 'utils/getConnection';
 
 const EngagementWrapper = styled.main`
   width: 100%;
@@ -65,6 +66,8 @@ const Engagement = (): JSX.Element => {
   const { proposalPubKey } = useParams<{ proposalPubKey: string }>();
   const history = useHistory();
 
+  const connection = getConnection();
+
   React.useEffect(() => {
     try {
       if (!proposalPubKey) {
@@ -75,7 +78,7 @@ const Engagement = (): JSX.Element => {
         if (!state.proposalInfo.data) {
           state.proposalInfo.isLoading = true;
           const programPubKey = new PublicKey(proposalPubKey);
-          const accountInfo = await snap.connection.getAccountInfo(programPubKey);
+          const accountInfo = await connection.getAccountInfo(programPubKey);
           if (accountInfo === null) {
             throw new Error('Error: cannot find the greeted account');
           } else {
