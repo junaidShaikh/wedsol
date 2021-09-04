@@ -1,3 +1,4 @@
+import * as React from 'react';
 import styled from 'styled-components/macro';
 import { useHistory } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -21,6 +22,7 @@ import FormInput from 'components/form-elements/FormInput';
 import FormTextArea from 'components/form-elements/FormTextArea';
 import SolidButton from 'components/common/SolidButton';
 import RingSelect from 'components/form-elements/RingSelect';
+import Spinner from 'components/common/Spinner';
 
 import rings from 'components/common/rings';
 
@@ -63,8 +65,19 @@ const SendNftRingFormWrapper = styled.div`
       width: 100%;
       max-width: 455px;
 
-      button {
+      button.solid-button {
         margin-top: 45px;
+        position: relative;
+
+        display: grid;
+        place-items: center;
+
+        .spinner {
+          width: 30px;
+          height: 30px;
+          position: absolute;
+          left: 15px;
+        }
       }
     }
   }
@@ -87,6 +100,8 @@ const SendNftRingFormWrapper = styled.div`
 `;
 
 const SendNftRingForm = (): JSX.Element => {
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
   const { register, watch, handleSubmit, setValue } = useForm({
     defaultValues,
     resolver: yupResolver(validationSchema),
@@ -98,93 +113,100 @@ const SendNftRingForm = (): JSX.Element => {
   const connection = new Connection(NETWORK);
 
   const onSubmit = async (d: typeof defaultValues) => {
-    console.log(d);
-    // history.push('/successful-mint');
+    try {
+      setIsSubmitting(true);
+      console.log(d);
 
-    // TODO Upload JSON to IPFS and get IPFS CID
-    const { data } = await uploadJsonToIpfs({ ...d, ring: rings[d.ring] });
+      // Upload JSON to IPFS and get IPFS CID
+      const { data } = await uploadJsonToIpfs({ ...d, ring: rings[d.ring] });
 
-    if (data) {
-      console.log(data);
-    }
+      if (data) {
+        console.log(data);
 
-    const provider = getProvider();
+        const provider = getProvider();
 
-    if (!provider?.publicKey) return;
+        if (!provider?.publicKey) return;
 
-    const programIdPublicKey = new PublicKey(config.programId);
+        const programIdPublicKey = new PublicKey(config.programId);
 
-    const programPubKey = await PublicKey.createWithSeed(provider.publicKey as PublicKey, 'hello', programIdPublicKey);
-    const lamports = await connection.getMinimumBalanceForRentExemption(15 * 1024);
-    let transaction = new Transaction().add(
-      SystemProgram.createAccountWithSeed({
-        fromPubkey: provider.publicKey,
-        basePubkey: provider.publicKey,
-        seed: 'hello',
-        newAccountPubkey: programPubKey,
-        lamports,
-        space: 15 * 1024,
-        programId: programIdPublicKey,
-      })
-    );
-    transaction.feePayer = provider.publicKey;
-    console.log('Getting recent blockhash');
-    (transaction as any).recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
-    if (transaction) {
-      try {
-        let signed = await provider.signTransaction(transaction);
-        console.log('Got signature, submitting transaction');
-        let signature = await connection.sendRawTransaction(signed.serialize());
-        console.log('Submitted transaction ' + signature + ', awaiting confirmation');
-        await connection.confirmTransaction(signature);
-        console.log('Transaction ' + signature + ' confirmed');
-      } catch (err: any) {
-        console.warn(err);
-        if (err?.code === 4001 && err?.message === 'User rejected the request.') {
-          alert(err.message);
+        const programPubKey = await PublicKey.createWithSeed(
+          provider.publicKey as PublicKey,
+          'hello',
+          programIdPublicKey
+        );
+        const lamports = await connection.getMinimumBalanceForRentExemption(15 * 1024);
+        let transaction = new Transaction().add(
+          SystemProgram.createAccountWithSeed({
+            fromPubkey: provider.publicKey,
+            basePubkey: provider.publicKey,
+            seed: 'hello',
+            newAccountPubkey: programPubKey,
+            lamports,
+            space: 15 * 1024,
+            programId: programIdPublicKey,
+          })
+        );
+        transaction.feePayer = provider.publicKey;
+        console.log('Getting recent blockhash');
+        (transaction as any).recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+        if (transaction) {
+          let signed = await provider.signTransaction(transaction);
+          console.log('Got signature, submitting transaction');
+          let signature = await connection.sendRawTransaction(signed.serialize());
+          console.log('Submitted transaction ' + signature + ', awaiting confirmation');
+          await connection.confirmTransaction(signature);
+          console.log('Transaction ' + signature + ' confirmed');
+        }
+
+        const proposalData = Buffer.alloc(64);
+        proposalData[0] = 0;
+        proposalData.fill(data.cid, 1);
+
+        const instruction = new TransactionInstruction({
+          keys: [
+            {
+              pubkey: provider.publicKey as PublicKey,
+              isSigner: true,
+              isWritable: false,
+            },
+            {
+              pubkey: programPubKey,
+              isSigner: false,
+              isWritable: true,
+            },
+          ],
+          programId: programIdPublicKey,
+          data: proposalData,
+        });
+        transaction = new Transaction().add(instruction);
+        transaction.feePayer = provider.publicKey;
+        console.log('Getting recent blockhash');
+        (transaction as any).recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+        if (transaction) {
+          let signed = await provider.signTransaction(transaction);
+          console.log('Got signature, submitting transaction');
+          let signature = await connection.sendRawTransaction(signed.serialize());
+          console.log('Submitted transaction ' + signature + ', awaiting confirmation');
+          await connection.confirmTransaction(signature);
+          console.log('Transaction ' + signature + ' confirmed');
+          history.push({
+            pathname: `/proposal/${programPubKey.toBase58()}/created`,
+            state: {
+              proposalTransaction: signature,
+              spouseName: d.spouseName,
+              message: d.message,
+              ring: d.ring,
+            },
+          });
         }
       }
-    }
-
-    const proposalData = Buffer.alloc(64);
-    proposalData[0] = 0;
-    proposalData.fill(data.cid, 1);
-
-    const instruction = new TransactionInstruction({
-      keys: [
-        {
-          pubkey: provider.publicKey as PublicKey,
-          isSigner: true,
-          isWritable: false,
-        },
-        {
-          pubkey: programPubKey,
-          isSigner: false,
-          isWritable: true,
-        },
-      ],
-      programId: programIdPublicKey,
-      data: proposalData,
-    });
-    transaction = new Transaction().add(instruction);
-    transaction.feePayer = provider.publicKey;
-    console.log('Getting recent blockhash');
-    (transaction as any).recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
-    if (transaction) {
-      try {
-        let signed = await provider.signTransaction(transaction);
-        console.log('Got signature, submitting transaction');
-        let signature = await connection.sendRawTransaction(signed.serialize());
-        console.log('Submitted transaction ' + signature + ', awaiting confirmation');
-        await connection.confirmTransaction(signature);
-        console.log('Transaction ' + signature + ' confirmed');
-        history.push('/successful-mint');
-      } catch (err: any) {
-        console.warn(err);
-        if (err?.code === 4001 && err?.message === 'User rejected the request.') {
-          alert(err.message);
-        }
+    } catch (error: any) {
+      console.warn(error);
+      if (error?.code === 4001 && error?.message === 'User rejected the request.') {
+        alert(error?.message);
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -198,7 +220,10 @@ const SendNftRingForm = (): JSX.Element => {
               <FormInput placeholder="Your potential spouses name" {...register('spouseName')} />
               <FormTextArea placeholder="Your Message" {...register('message')} />
               <RingSelect label="Pick a ring" onChange={(value) => setValue('ring', value)} />
-              <SolidButton type="submit">MINT NFT</SolidButton>
+              <SolidButton type="submit" className="solid-button">
+                {isSubmitting && <Spinner className="spinner" />}
+                {isSubmitting ? 'Minting...' : 'MINT NFT'}
+              </SolidButton>
             </form>
           </FlexColumnWrapper>
           <FlexColumnWrapper className="col-2">
