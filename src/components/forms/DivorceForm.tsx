@@ -1,6 +1,11 @@
+import * as React from 'react';
 import styled from 'styled-components/macro';
+import { useParams, useHistory } from 'react-router-dom';
+import { useSnapshot } from 'valtio';
+import { PublicKey, TransactionInstruction, Transaction } from '@solana/web3.js';
+import { Buffer } from 'buffer';
 
-import { useHistory } from 'react-router-dom';
+import { state } from 'state';
 
 import Container from 'components/common/wrappers/Container';
 import FlexRowWrapper from 'components/common/wrappers/FlexRowWrapper';
@@ -9,6 +14,13 @@ import SolidButton from 'components/common/SolidButton';
 import ProposalLink from 'components/ProposalLink';
 import SignerCard from 'components/SignerCard';
 import AssetCardMini from 'components/AssetCardMini';
+import Spinner from 'components/common/Spinner';
+import ConnectWalletButton from 'components/ConnectWalletButton';
+
+import { getProvider } from 'utils/getProvider';
+import { uploadJsonToIpfs } from 'apis/ipfs';
+import config from 'config';
+import getConnection from 'utils/getConnection';
 
 const DivorceFormWrapper = styled.div`
   width: 100%;
@@ -47,9 +59,25 @@ const DivorceFormWrapper = styled.div`
         }
       }
 
-      button {
+      button.solid-button {
         margin-top: 45px;
-        background: #f36a71;
+        background: #f36a71 !important;
+        position: relative;
+
+        display: grid;
+        place-items: center;
+
+        .spinner {
+          width: 30px;
+          height: 30px;
+          position: absolute;
+          left: 15px;
+        }
+      }
+
+      .connect-wallet-button {
+        width: 100%;
+        margin: 45px 0 0 0;
       }
     }
   }
@@ -77,14 +105,95 @@ const DivorceFormWrapper = styled.div`
 `;
 
 const DivorceForm = (): JSX.Element => {
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  const { proposalPubKey } = useParams<{ proposalPubKey: string }>();
+
   const history = useHistory();
+
+  const snap = useSnapshot(state);
+
+  const connection = getConnection();
+
+  React.useEffect(() => {
+    if (!proposalPubKey) {
+      history.replace('/');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleSubmit = async () => {
+    try {
+      setIsSubmitting(true);
+
+      const provider = getProvider();
+
+      if (!provider?.publicKey) return;
+
+      const programIdPublicKey = new PublicKey(config.programId);
+
+      // Upload JSON to IPFS and get IPFS CID
+      const { data } = await uploadJsonToIpfs({});
+
+      if (data) {
+        console.log(data);
+
+        const divorceData = Buffer.alloc(64);
+        divorceData[0] = 6;
+
+        const instruction = new TransactionInstruction({
+          keys: [
+            {
+              pubkey: provider.publicKey as PublicKey,
+              isSigner: true,
+              isWritable: false,
+            },
+            {
+              pubkey: new PublicKey(proposalPubKey),
+              isSigner: false,
+              isWritable: true,
+            },
+          ],
+          programId: programIdPublicKey,
+          data: divorceData,
+        });
+        const transaction = new Transaction().add(instruction);
+        transaction.feePayer = provider.publicKey;
+        console.log('Getting recent blockhash');
+        (transaction as any).recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+        if (transaction) {
+          let signed = await provider.signTransaction(transaction);
+          console.log('Got signature, submitting transaction');
+          let signature = await connection.sendRawTransaction(signed.serialize());
+          console.log('Submitted transaction ' + signature + ', awaiting confirmation');
+          await connection.confirmTransaction(signature);
+          console.log('Transaction ' + signature + ' confirmed');
+          history.push({
+            pathname: `/`,
+          });
+        }
+      }
+    } catch (error: any) {
+      console.warn(error);
+      if (error?.code === 4001 && error?.message === 'User rejected the request.') {
+        alert(error?.message);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <DivorceFormWrapper>
       <Container>
         <FlexRowWrapper>
           <FlexColumnWrapper className="col-1">
-            <form>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                handleSubmit();
+              }}
+            >
               <label>After Divorce</label>
               <AssetCardMini
                 className="asset-card"
@@ -107,9 +216,14 @@ const DivorceForm = (): JSX.Element => {
                 assetValue="$1.5M"
                 assetOwnershipPercentage="50:50"
               />
-              <SolidButton type="button" onClick={() => history.push('/')}>
-                SIGN AND DIVORCE
-              </SolidButton>
+              {snap.isWalletConnected ? (
+                <SolidButton type="submit" className="solid-button">
+                  {isSubmitting && <Spinner className="spinner" />}
+                  {isSubmitting ? 'Signing...' : 'SIGN AND DIVORCE'}
+                </SolidButton>
+              ) : (
+                <ConnectWalletButton className="connect-wallet-button" />
+              )}
             </form>
           </FlexColumnWrapper>
           <FlexColumnWrapper className="col-2">
