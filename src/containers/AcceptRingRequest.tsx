@@ -12,9 +12,9 @@ import { state } from 'state';
 import ConnectedAccountPill from 'components/ConnectedAccountPill';
 import Container from 'components/common/wrappers/Container';
 import AcceptRingRequestCard from 'components/AcceptRingRequestCard';
+import FullPageSpinner from 'components/common/FullPageSpinner';
 
 import rings from 'components/common/rings';
-import FullPageSpinner from 'components/common/FullPageSpinner';
 
 import shortenWalletAddress from 'utils/shortenWalletAddress';
 
