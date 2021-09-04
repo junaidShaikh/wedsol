@@ -4,15 +4,11 @@ import { useHistory } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
-import {
-  Connection,
-  PublicKey,
-  TransactionInstruction,
-  Transaction,
-  SystemProgram,
-  clusterApiUrl,
-} from '@solana/web3.js';
+import { PublicKey, TransactionInstruction, Transaction, SystemProgram } from '@solana/web3.js';
 import { Buffer } from 'buffer';
+import { useSnapshot } from 'valtio';
+
+import { state } from 'state';
 
 import Container from 'components/common/wrappers/Container';
 import FlexRowWrapper from 'components/common/wrappers/FlexRowWrapper';
@@ -30,20 +26,18 @@ import { getProvider } from 'utils/getProvider';
 import { uploadJsonToIpfs } from 'apis/ipfs';
 import config from 'config';
 
-const NETWORK = clusterApiUrl('devnet');
-
 const defaultValues = {
   proposerName: '',
   spouseName: '',
   message: '',
-  ring: 0,
+  proposerRing: 0,
 };
 
 const validationSchema = Yup.object({
   proposerName: Yup.string().required(),
   spouseName: Yup.string().required(),
   message: Yup.string().required(),
-  ring: Yup.number().positive().integer().required(),
+  proposerRing: Yup.number().positive().integer().required(),
 }).required();
 
 const SendNftRingFormWrapper = styled.div`
@@ -106,11 +100,11 @@ const SendNftRingForm = (): JSX.Element => {
     defaultValues,
     resolver: yupResolver(validationSchema),
   });
-  const formValues = watch(['spouseName', 'message', 'ring']);
+  const formValues = watch(['spouseName', 'message', 'proposerRing']);
 
   const history = useHistory();
 
-  const connection = new Connection(NETWORK);
+  const snap = useSnapshot(state);
 
   const onSubmit = async (d: typeof defaultValues) => {
     try {
@@ -118,7 +112,7 @@ const SendNftRingForm = (): JSX.Element => {
       console.log(d);
 
       // Upload JSON to IPFS and get IPFS CID
-      const { data } = await uploadJsonToIpfs({ ...d, ring: rings[d.ring] });
+      const { data } = await uploadJsonToIpfs({ ...d, proposerRing: rings[d.proposerRing] });
 
       if (data) {
         console.log(data);
@@ -134,7 +128,7 @@ const SendNftRingForm = (): JSX.Element => {
           'hello',
           programIdPublicKey
         );
-        const lamports = await connection.getMinimumBalanceForRentExemption(15 * 1024);
+        const lamports = await snap.connection.getMinimumBalanceForRentExemption(15 * 1024);
         let transaction = new Transaction().add(
           SystemProgram.createAccountWithSeed({
             fromPubkey: provider.publicKey,
@@ -148,19 +142,19 @@ const SendNftRingForm = (): JSX.Element => {
         );
         transaction.feePayer = provider.publicKey;
         console.log('Getting recent blockhash');
-        (transaction as any).recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+        (transaction as any).recentBlockhash = (await snap.connection.getRecentBlockhash()).blockhash;
         if (transaction) {
           let signed = await provider.signTransaction(transaction);
           console.log('Got signature, submitting transaction');
-          let signature = await connection.sendRawTransaction(signed.serialize());
+          let signature = await snap.connection.sendRawTransaction(signed.serialize());
           console.log('Submitted transaction ' + signature + ', awaiting confirmation');
-          await connection.confirmTransaction(signature);
+          await snap.connection.confirmTransaction(signature);
           console.log('Transaction ' + signature + ' confirmed');
         }
 
-        const proposalData = Buffer.alloc(64);
-        proposalData[0] = 0;
-        proposalData.fill(data.cid, 1);
+        let proposalData = '';
+        proposalData += '\x04';
+        proposalData += data.cid;
 
         const instruction = new TransactionInstruction({
           keys: [
@@ -176,18 +170,18 @@ const SendNftRingForm = (): JSX.Element => {
             },
           ],
           programId: programIdPublicKey,
-          data: proposalData,
+          data: Buffer.from(proposalData, 'utf-8'),
         });
         transaction = new Transaction().add(instruction);
         transaction.feePayer = provider.publicKey;
         console.log('Getting recent blockhash');
-        (transaction as any).recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+        (transaction as any).recentBlockhash = (await snap.connection.getRecentBlockhash()).blockhash;
         if (transaction) {
           let signed = await provider.signTransaction(transaction);
           console.log('Got signature, submitting transaction');
-          let signature = await connection.sendRawTransaction(signed.serialize());
+          let signature = await snap.connection.sendRawTransaction(signed.serialize());
           console.log('Submitted transaction ' + signature + ', awaiting confirmation');
-          await connection.confirmTransaction(signature);
+          await snap.connection.confirmTransaction(signature);
           console.log('Transaction ' + signature + ' confirmed');
           history.push({
             pathname: `/proposal/${programPubKey.toBase58()}/created`,
@@ -195,7 +189,7 @@ const SendNftRingForm = (): JSX.Element => {
               proposalTransaction: signature,
               spouseName: d.spouseName,
               message: d.message,
-              ring: d.ring,
+              proposerRing: d.proposerRing,
             },
           });
         }
@@ -219,7 +213,7 @@ const SendNftRingForm = (): JSX.Element => {
               <FormInput placeholder="Your Name" {...register('proposerName')} />
               <FormInput placeholder="Your potential spouses name" {...register('spouseName')} />
               <FormTextArea placeholder="Your Message" {...register('message')} />
-              <RingSelect label="Pick a ring" onChange={(value) => setValue('ring', value)} />
+              <RingSelect label="Pick a ring" onChange={(value) => setValue('proposerRing', value)} />
               <SolidButton type="submit" className="solid-button">
                 {isSubmitting && <Spinner className="spinner" />}
                 {isSubmitting ? 'Minting...' : 'MINT NFT'}
