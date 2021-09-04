@@ -1,8 +1,12 @@
+import * as React from 'react';
 import styled from 'styled-components/macro';
 import { useHistory } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
+
+import { PublicKey, TransactionInstruction, Transaction } from '@solana/web3.js';
+import { Buffer } from 'buffer';
 
 import Container from 'components/common/wrappers/Container';
 import FlexRowWrapper from 'components/common/wrappers/FlexRowWrapper';
@@ -13,6 +17,12 @@ import SolidButton from 'components/common/SolidButton';
 import AddImages from 'components/form-elements/AddImages';
 import ProposalLink from 'components/ProposalLink';
 import SignerCard from 'components/SignerCard';
+import Spinner from 'components/common/Spinner';
+
+import { getProvider } from 'utils/getProvider';
+import { uploadJsonToIpfs } from 'apis/ipfs';
+import config from 'config';
+import getConnection from 'utils/getConnection';
 
 const defaultValues = {
   images: [] as string[],
@@ -74,8 +84,19 @@ const AddAssetFormWrapper = styled.div`
         }
       }
 
-      button {
+      button.solid-button {
         margin-top: 45px;
+        position: relative;
+
+        display: grid;
+        place-items: center;
+
+        .spinner {
+          width: 30px;
+          height: 30px;
+          position: absolute;
+          left: 15px;
+        }
       }
     }
   }
@@ -103,6 +124,8 @@ const AddAssetFormWrapper = styled.div`
 `;
 
 const AddAssetForm = (): JSX.Element => {
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
   const { register, watch, handleSubmit, setValue } = useForm({
     defaultValues,
     resolver: yupResolver(validationSchema),
@@ -112,9 +135,78 @@ const AddAssetForm = (): JSX.Element => {
 
   const history = useHistory();
 
-  const onSubmit = (d: any) => {
+  const connection = getConnection();
+
+  const onSubmit = async (d: typeof defaultValues) => {
     console.log(d);
-    history.push('/approve-asset');
+    // history.push('/approve-asset');
+
+    try {
+      setIsSubmitting(true);
+      console.log(d);
+
+      const provider = getProvider();
+
+      if (!provider?.publicKey) return;
+
+      const programIdPublicKey = new PublicKey(config.programId);
+
+      const proposalPubKey = await PublicKey.createWithSeed(
+        provider.publicKey as PublicKey,
+        'hello',
+        programIdPublicKey
+      );
+
+      // Upload JSON to IPFS and get IPFS CID
+      const { data } = await uploadJsonToIpfs({ ...defaultValues });
+
+      if (data) {
+        console.log(data);
+
+        let addAssetData = '';
+        addAssetData += '\x02';
+        addAssetData += data.cid;
+
+        const instruction = new TransactionInstruction({
+          keys: [
+            {
+              pubkey: provider.publicKey as PublicKey,
+              isSigner: true,
+              isWritable: false,
+            },
+            {
+              pubkey: proposalPubKey,
+              isSigner: false,
+              isWritable: true,
+            },
+          ],
+          programId: programIdPublicKey,
+          data: Buffer.from(addAssetData, 'utf-8'),
+        });
+        const transaction = new Transaction().add(instruction);
+        transaction.feePayer = provider.publicKey;
+        console.log('Getting recent blockhash');
+        (transaction as any).recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+        if (transaction) {
+          let signed = await provider.signTransaction(transaction);
+          console.log('Got signature, submitting transaction');
+          let signature = await connection.sendRawTransaction(signed.serialize());
+          console.log('Submitted transaction ' + signature + ', awaiting confirmation');
+          await connection.confirmTransaction(signature);
+          console.log('Transaction ' + signature + ' confirmed');
+          history.push({
+            pathname: `/approve-asset/${proposalPubKey}`,
+          });
+        }
+      }
+    } catch (error: any) {
+      console.warn(error);
+      if (error?.code === 4001 && error?.message === 'User rejected the request.') {
+        alert(error?.message);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -162,7 +254,10 @@ const AddAssetForm = (): JSX.Element => {
                   </p>
                 ) : null}
               </FlexRowWrapper>
-              <SolidButton type="submit">SIGN ASSET</SolidButton>
+              <SolidButton type="submit" className="solid-button">
+                {isSubmitting && <Spinner className="spinner" />}
+                {isSubmitting ? 'Signing...' : 'SIGN ASSET'}
+              </SolidButton>
             </form>
           </FlexColumnWrapper>
           <FlexColumnWrapper className="col-2">
