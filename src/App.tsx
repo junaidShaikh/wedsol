@@ -45,7 +45,7 @@ const App = () => {
             <ProtectedRoute exact path="/marriage/:proposalPubKey" component={Marriage} />
             <ProtectedRoute exact path="/assets" component={Assets} />
             <ProtectedRoute exact path="/add-asset" component={AddAsset} />
-            <ProtectedRoute exact path="/approve-asset" component={ApproveAsset} />
+            <Route exact path="/approve-asset/:proposalPubKey/:ipfsCid" component={ApproveAsset} />
             <ProtectedRoute exact path="/divorce" component={Divorce} />
           </Switch>
           <Footer />
