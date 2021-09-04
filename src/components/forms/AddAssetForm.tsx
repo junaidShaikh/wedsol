@@ -138,9 +138,6 @@ const AddAssetForm = (): JSX.Element => {
   const connection = getConnection();
 
   const onSubmit = async (d: typeof defaultValues) => {
-    console.log(d);
-    // history.push('/approve-asset');
-
     try {
       setIsSubmitting(true);
       console.log(d);
@@ -195,7 +192,7 @@ const AddAssetForm = (): JSX.Element => {
           await connection.confirmTransaction(signature);
           console.log('Transaction ' + signature + ' confirmed');
           history.push({
-            pathname: `/approve-asset/${proposalPubKey}`,
+            pathname: `/approve-asset/${proposalPubKey}/${data.cid}`,
           });
         }
       }
