@@ -1,9 +1,13 @@
+import * as React from 'react';
 import styled from 'styled-components/macro';
 import { useHistory } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
 import { format } from 'date-fns';
+
+import { PublicKey, TransactionInstruction, Transaction } from '@solana/web3.js';
+import { Buffer } from 'buffer';
 
 import Container from 'components/common/wrappers/Container';
 import FlexRowWrapper from 'components/common/wrappers/FlexRowWrapper';
@@ -12,6 +16,12 @@ import MarriagePreview from 'components/MarriagePreview';
 import FormInput from 'components/form-elements/FormInput';
 import FormTextArea from 'components/form-elements/FormTextArea';
 import SolidButton from 'components/common/SolidButton';
+import Spinner from 'components/common/Spinner';
+
+import { getProvider } from 'utils/getProvider';
+import { uploadJsonToIpfs } from 'apis/ipfs';
+import config from 'config';
+import getConnection from 'utils/getConnection';
 
 const defaultValues = {
   marriageDate: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
@@ -48,8 +58,19 @@ const MarriageFormWrapper = styled.div`
       width: 100%;
       max-width: 455px;
 
-      button {
+      button.solid-button {
         margin-top: 45px;
+        position: relative;
+
+        display: grid;
+        place-items: center;
+
+        .spinner {
+          width: 30px;
+          height: 30px;
+          position: absolute;
+          left: 15px;
+        }
       }
     }
   }
@@ -72,6 +93,8 @@ const MarriageFormWrapper = styled.div`
 `;
 
 const MarriageForm = (): JSX.Element => {
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
   const { register, watch, handleSubmit } = useForm({
     defaultValues,
     resolver: yupResolver(validationSchema),
@@ -80,9 +103,74 @@ const MarriageForm = (): JSX.Element => {
 
   const history = useHistory();
 
-  const onSubmit = (d: any) => {
-    console.log(d);
-    history.push('/marriage');
+  const connection = getConnection();
+
+  const onSubmit = async (d: typeof defaultValues) => {
+    try {
+      setIsSubmitting(true);
+      console.log(d);
+
+      const provider = getProvider();
+
+      if (!provider?.publicKey) return;
+
+      const programIdPublicKey = new PublicKey(config.programId);
+
+      const proposalPubKey = await PublicKey.createWithSeed(
+        provider.publicKey as PublicKey,
+        'hello',
+        programIdPublicKey
+      );
+
+      // Upload JSON to IPFS and get IPFS CID
+      const { data } = await uploadJsonToIpfs({ ...defaultValues });
+
+      if (data) {
+        console.log(data);
+
+        const marriageData = Buffer.alloc(64);
+        marriageData[0] = 8;
+
+        const instruction = new TransactionInstruction({
+          keys: [
+            {
+              pubkey: provider.publicKey as PublicKey,
+              isSigner: true,
+              isWritable: false,
+            },
+            {
+              pubkey: proposalPubKey,
+              isSigner: false,
+              isWritable: true,
+            },
+          ],
+          programId: programIdPublicKey,
+          data: marriageData,
+        });
+        const transaction = new Transaction().add(instruction);
+        transaction.feePayer = provider.publicKey;
+        console.log('Getting recent blockhash');
+        (transaction as any).recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+        if (transaction) {
+          let signed = await provider.signTransaction(transaction);
+          console.log('Got signature, submitting transaction');
+          let signature = await connection.sendRawTransaction(signed.serialize());
+          console.log('Submitted transaction ' + signature + ', awaiting confirmation');
+          await connection.confirmTransaction(signature);
+          console.log('Transaction ' + signature + ' confirmed');
+          history.push({
+            pathname: `/marriage/${proposalPubKey}`,
+          });
+        }
+      }
+    } catch (error: any) {
+      console.warn(error);
+      if (error?.code === 4001 && error?.message === 'User rejected the request.') {
+        alert(error?.message);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -98,7 +186,10 @@ const MarriageForm = (): JSX.Element => {
               </FlexRowWrapper>
               <FormTextArea placeholder="Your vows" {...register('proposerVows')} />
               <FormTextArea placeholder="Your spouse's vows" {...register('spouseVows')} />
-              <SolidButton type="submit">CREATE CONTRACT</SolidButton>
+              <SolidButton type="submit" className="solid-button">
+                {isSubmitting && <Spinner className="spinner" />}
+                {isSubmitting ? 'Creating...' : 'CREATE CONTRACT'}
+              </SolidButton>
             </form>
           </FlexColumnWrapper>
           <FlexColumnWrapper className="col-2">
