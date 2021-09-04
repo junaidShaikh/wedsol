@@ -71,7 +71,7 @@ const ProposalStages = (): JSX.Element => {
   return (
     <ProposalStagesWrapper>
       <FlexRowWrapper>
-        <FlexColumnWrapper onClick={() => history.push('/send-nft-ring')}>
+        <FlexColumnWrapper onClick={() => history.push('/proposal/new')}>
           <FlexRowWrapper>
             <img src={sendARing} alt="" className="send-a-ring-image" />
             <div>
@@ -80,7 +80,7 @@ const ProposalStages = (): JSX.Element => {
             </div>
           </FlexRowWrapper>
         </FlexColumnWrapper>
-        <FlexColumnWrapper onClick={() => history.push('/start-new-marriage')}>
+        <FlexColumnWrapper onClick={() => history.push('/marriage/new')}>
           <FlexRowWrapper>
             <img src={registerMarriage} alt="" className="register-marriage-image" />
             <div>

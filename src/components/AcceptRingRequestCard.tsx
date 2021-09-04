@@ -206,7 +206,7 @@ const AcceptRingRequestCard = ({
             <SolidButton
               className="accept-ring-button"
               onClick={() => {
-                history.push('/accepting-ring');
+                history.push('/proposal/:proposalPubKey/accepting');
               }}
             >
               Accept Ring
