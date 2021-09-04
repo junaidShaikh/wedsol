@@ -1,8 +1,14 @@
+import * as React from 'react';
 import styled from 'styled-components/macro';
-import { useHistory } from 'react-router-dom';
+import { useParams, useHistory } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
+import { useSnapshot } from 'valtio';
+import { PublicKey, TransactionInstruction, Transaction } from '@solana/web3.js';
+import { Buffer } from 'buffer';
+
+import { state } from 'state';
 
 import Container from 'components/common/wrappers/Container';
 import FlexRowWrapper from 'components/common/wrappers/FlexRowWrapper';
@@ -11,6 +17,13 @@ import FormInput from 'components/form-elements/FormInput';
 import SolidButton from 'components/common/SolidButton';
 import ProposalLink from 'components/ProposalLink';
 import SignerCard from 'components/SignerCard';
+import Spinner from 'components/common/Spinner';
+import ConnectWalletButton from 'components/ConnectWalletButton';
+
+import { getProvider } from 'utils/getProvider';
+import { uploadJsonToIpfs } from 'apis/ipfs';
+import config from 'config';
+import getConnection from 'utils/getConnection';
 
 const defaultValues = {
   percentageSplit: null,
@@ -149,8 +162,24 @@ const ApproveAssetFormWrapper = styled.div`
         }
       }
 
-      button {
+      button.solid-button {
         margin-top: 45px;
+        position: relative;
+
+        display: grid;
+        place-items: center;
+
+        .spinner {
+          width: 30px;
+          height: 30px;
+          position: absolute;
+          left: 15px;
+        }
+      }
+
+      .connect-wallet-button {
+        width: 100%;
+        margin: 45px 0 0 0;
       }
     }
   }
@@ -178,6 +207,10 @@ const ApproveAssetFormWrapper = styled.div`
 `;
 
 const ApproveAssetForm = (): JSX.Element => {
+  const [isSubmitting, setIsSubmitting] = React.useState(false);
+
+  const { proposalPubKey, ipfsCid } = useParams<{ proposalPubKey: string; ipfsCid: string }>();
+
   const { register, watch, handleSubmit } = useForm({
     defaultValues,
     resolver: yupResolver(validationSchema),
@@ -187,9 +220,84 @@ const ApproveAssetForm = (): JSX.Element => {
 
   const history = useHistory();
 
-  const onSubmit = (d: any) => {
-    console.log(d);
-    history.push('/divorce');
+  const snap = useSnapshot(state);
+
+  const connection = getConnection();
+
+  React.useEffect(() => {
+    if (!proposalPubKey || !ipfsCid) {
+      history.replace('/');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const onSubmit = async (d: typeof defaultValues) => {
+    try {
+      setIsSubmitting(true);
+      console.log(d);
+
+      const provider = getProvider();
+
+      if (!provider?.publicKey) return;
+
+      const programIdPublicKey = new PublicKey(config.programId);
+
+      const proposalPubKey = await PublicKey.createWithSeed(
+        provider.publicKey as PublicKey,
+        'hello',
+        programIdPublicKey
+      );
+
+      // Upload JSON to IPFS and get IPFS CID
+      const { data } = await uploadJsonToIpfs({ ...defaultValues });
+
+      if (data) {
+        console.log(data);
+
+        let addAssetData = '';
+        addAssetData += '\x02';
+        addAssetData += data.cid;
+
+        const instruction = new TransactionInstruction({
+          keys: [
+            {
+              pubkey: provider.publicKey as PublicKey,
+              isSigner: true,
+              isWritable: false,
+            },
+            {
+              pubkey: proposalPubKey,
+              isSigner: false,
+              isWritable: true,
+            },
+          ],
+          programId: programIdPublicKey,
+          data: Buffer.from(addAssetData, 'utf-8'),
+        });
+        const transaction = new Transaction().add(instruction);
+        transaction.feePayer = provider.publicKey;
+        console.log('Getting recent blockhash');
+        (transaction as any).recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+        if (transaction) {
+          let signed = await provider.signTransaction(transaction);
+          console.log('Got signature, submitting transaction');
+          let signature = await connection.sendRawTransaction(signed.serialize());
+          console.log('Submitted transaction ' + signature + ', awaiting confirmation');
+          await connection.confirmTransaction(signature);
+          console.log('Transaction ' + signature + ' confirmed');
+          history.push({
+            pathname: `/divorce/${proposalPubKey}`,
+          });
+        }
+      }
+    } catch (error: any) {
+      console.warn(error);
+      if (error?.code === 4001 && error?.message === 'User rejected the request.') {
+        alert(error?.message);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -256,7 +364,14 @@ const ApproveAssetForm = (): JSX.Element => {
                   </p>
                 ) : null}
               </FlexRowWrapper>
-              <SolidButton type="submit">SIGN ASSET</SolidButton>
+              {snap.isWalletConnected ? (
+                <SolidButton type="submit" className="solid-button">
+                  {isSubmitting && <Spinner className="spinner" />}
+                  {isSubmitting ? 'Signing...' : 'SIGN ASSET'}
+                </SolidButton>
+              ) : (
+                <ConnectWalletButton className="connect-wallet-button" />
+              )}
             </form>
           </FlexColumnWrapper>
           <FlexColumnWrapper className="col-2">
