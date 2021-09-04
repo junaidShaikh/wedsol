@@ -4,6 +4,7 @@ import { PublicKey } from '@solana/web3.js';
 import { useParams, useHistory } from 'react-router-dom';
 import axios from 'axios';
 import { useSnapshot } from 'valtio';
+import { Buffer } from 'buffer';
 
 import config from 'config';
 import { state } from 'state';
@@ -14,6 +15,8 @@ import AcceptRingRequestCard from 'components/AcceptRingRequestCard';
 
 import rings from 'components/common/rings';
 import FullPageSpinner from 'components/common/FullPageSpinner';
+
+import shortenWalletAddress from 'utils/shortenWalletAddress';
 
 const AcceptRingRequestWrapper = styled.main`
   width: 100%;
@@ -63,7 +66,17 @@ const AcceptRingRequest = (): JSX.Element => {
             if (data) {
               state.proposalInfo.isLoading = false;
               state.proposalInfo.isSuccess = true;
-              state.proposalInfo.data = data;
+              state.proposalInfo.data = {
+                ...data,
+                signers: [
+                  !result.partner1.every((value: number) => value === 0)
+                    ? shortenWalletAddress(new PublicKey(Buffer.from(result.partner1)).toBase58(), 5)
+                    : null,
+                  !result.partner2.every((value: number) => value === 0)
+                    ? shortenWalletAddress(new PublicKey(Buffer.from(result.partner2)).toBase58(), 5)
+                    : null,
+                ],
+              };
             } else {
               state.proposalInfo.isLoading = false;
               state.proposalInfo.isSuccess = false;
@@ -89,11 +102,12 @@ const AcceptRingRequest = (): JSX.Element => {
       <ConnectedAccountPill className="connected-account-pill" />
       <Container>
         <AcceptRingRequestCard
+          proposalPubKey={proposalPubKey}
           proposerName={snap.proposalInfo.data?.proposerName ?? ''}
           spouseName={snap.proposalInfo.data?.spouseName ?? ''}
-          proposerRing={snap.proposalInfo.data?.ring ?? rings[0]}
+          proposerRing={snap.proposalInfo.data?.proposerRing ?? rings[0]}
           message={snap.proposalInfo.data?.message ?? ''}
-          signedBy={[snap.proposalInfo.data?.proposerName as string]}
+          signedBy={snap.proposalInfo.data?.signers ?? []}
           qrCodeString={window.location.href}
         />
       </Container>
