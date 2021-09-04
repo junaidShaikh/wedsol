@@ -35,13 +35,13 @@ const App = () => {
           <Switch>
             <Route exact path="/" component={Landing} />
             <ProtectedRoute exact path="/proposal" component={Proposal} />
-            <ProtectedRoute exact path="/send-nft-ring" component={SendNFTRing} />
-            <ProtectedRoute exact path="/successful-mint" component={SuccessfullyMinted} />
-            <Route exact path="/accept-ring-request" component={AcceptRingRequest} />
-            <ProtectedRoute exact path="/accepting-ring" component={AcceptingRing} />
-            <Route exact path="/engagement" component={Engagement} />
+            <ProtectedRoute exact path="/proposal/new" component={SendNFTRing} />
+            <ProtectedRoute exact path="/proposal/:proposalPubKey/created" component={SuccessfullyMinted} />
+            <Route exact path="/proposal/:proposalPubKey/accept" component={AcceptRingRequest} />
+            <ProtectedRoute exact path="/proposal/:proposalPubKey/accepting" component={AcceptingRing} />
+            <Route exact path="/engagement/:proposalPubKey" component={Engagement} />
 
-            <ProtectedRoute exact path="/start-new-marriage" component={StartNewMarriage} />
+            <ProtectedRoute exact path="/marriage/new" component={StartNewMarriage} />
             <ProtectedRoute exact path="/marriage" component={Marriage} />
             <ProtectedRoute exact path="/assets" component={Assets} />
             <ProtectedRoute exact path="/add-asset" component={AddAsset} />
