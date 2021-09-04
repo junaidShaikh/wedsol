@@ -1,4 +1,7 @@
 import styled from 'styled-components/macro';
+import { useSnapshot } from 'valtio';
+
+import { state } from 'state';
 
 import ConnectedAccountPill from 'components/ConnectedAccountPill';
 import SectionTitle from 'components/common/SectionTitle';
@@ -25,11 +28,18 @@ const AcceptingRingWrapper = styled.main`
 `;
 
 const AcceptingRing = (): JSX.Element => {
+  const snap = useSnapshot(state);
+
   return (
     <AcceptingRingWrapper>
       <ConnectedAccountPill className="connected-account-pill" />
       <SectionTitle className="section-title">Accepting Ring</SectionTitle>
-      <AcceptingRingForm proposerName="Rahul" spouseName="Priyanka" qrCodeString="Hello World" />
+      <AcceptingRingForm
+        proposerName={snap.proposalInfo.data?.proposerName ?? ''}
+        spouseName={snap.proposalInfo.data?.spouseName ?? ''}
+        proposerRing={snap.proposalInfo.data?.proposerRing ?? ''}
+        qrCodeString={window.location.href}
+      />
     </AcceptingRingWrapper>
   );
 };
