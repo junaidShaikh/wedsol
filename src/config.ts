@@ -2,7 +2,7 @@ import { AppConfig } from 'ts/interfaces/global.interface';
 
 const prodConfig: AppConfig = {
   apiBaseUrl: 'https://snft.ocg.technology/',
-  programId: '2X5ckL9vKj6sAFQRpNqHqnfh8W9LyrAu1T2XiDza7nHG',
+  programId: 'gAp5HRjYDHYFRbtdhWfU5aqS6tWnipSMKb2UYBoEJDt',
   solanaNetwork: 'devnet',
   ipfsGatewayBaseUrl: 'https://snft.ocg.technology/ipfs/',
   generateSolanaExplorerBaseUrl: (transaction: string) =>
@@ -11,7 +11,7 @@ const prodConfig: AppConfig = {
 
 const stagingConfig: AppConfig = {
   apiBaseUrl: 'https://snft.ocg.technology/',
-  programId: '2X5ckL9vKj6sAFQRpNqHqnfh8W9LyrAu1T2XiDza7nHG',
+  programId: 'gAp5HRjYDHYFRbtdhWfU5aqS6tWnipSMKb2UYBoEJDt',
   solanaNetwork: 'devnet',
   ipfsGatewayBaseUrl: 'https://snft.ocg.technology/ipfs/',
   generateSolanaExplorerBaseUrl: (transaction: string) =>
@@ -20,7 +20,7 @@ const stagingConfig: AppConfig = {
 
 const localConfig: AppConfig = {
   apiBaseUrl: 'https://snft.ocg.technology/',
-  programId: '2X5ckL9vKj6sAFQRpNqHqnfh8W9LyrAu1T2XiDza7nHG',
+  programId: 'gAp5HRjYDHYFRbtdhWfU5aqS6tWnipSMKb2UYBoEJDt',
   solanaNetwork: 'devnet',
   ipfsGatewayBaseUrl: 'https://snft.ocg.technology/ipfs/',
   generateSolanaExplorerBaseUrl: (transaction: string) =>
