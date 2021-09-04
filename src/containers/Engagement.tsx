@@ -1,5 +1,8 @@
 import styled from 'styled-components/macro';
+import { useSnapshot } from 'valtio';
 import { IoLink, IoLogoTwitter, IoLogoFacebook } from 'react-icons/io5';
+
+import { state } from 'state';
 
 import Container from 'components/common/wrappers/Container';
 import FlexColumnWrapper from 'components/common/wrappers/FlexColumnWrapper';
@@ -48,6 +51,8 @@ const EngagementWrapper = styled.main`
 `;
 
 const Engagement = (): JSX.Element => {
+  const snap = useSnapshot(state);
+
   return (
     <EngagementWrapper>
       <Container>
@@ -65,13 +70,13 @@ const Engagement = (): JSX.Element => {
           </FlexRowWrapper>
           <FlexRowWrapper className="row-2">
             <EngagementCard
-              proposerName="Rahul"
-              spouseName="Priyanka"
-              engagementDate={Date().toString()}
-              proposerRing={rings[0]}
-              spouseRing={rings[1]}
-              signedBy={['Rahul Kumar', 'Priyanka Bedi']}
-              qrCodeString="Hello World"
+              proposerName={snap.proposalInfo.data?.proposerName ?? ''}
+              spouseName={snap.proposalInfo.data?.spouseName ?? ''}
+              engagementDate={snap.proposalInfo.data?.engagementDate ?? Date().toString()}
+              proposerRing={snap.proposalInfo.data?.proposerRing ?? rings[0]}
+              spouseRing={snap.proposalInfo.data?.spouseRing ?? rings[1]}
+              signedBy={snap.proposalInfo.data?.signers ?? []}
+              qrCodeString={window.location.href}
             />
           </FlexRowWrapper>
         </FlexColumnWrapper>
