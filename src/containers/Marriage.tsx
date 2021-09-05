@@ -136,7 +136,6 @@ const Marriage = (): JSX.Element => {
         setProposalInfoLoading();
         const accountInfo = await getAccountInfo(new PublicKey(proposalPubKey));
         const { data } = await fetchIpfsJsonData(accountInfo?.extra?.substr(0, 46));
-        console.log(data);
         if (data) {
           setProposalInfoData({
             ...data,

@@ -58,9 +58,7 @@ const AcceptRingRequest = (): JSX.Element => {
       (async () => {
         setProposalInfoLoading();
         const accountInfo = await getAccountInfo(new PublicKey(proposalPubKey));
-        console.log(accountInfo);
         const { data } = await fetchIpfsJsonData(accountInfo?.extra?.substr(0, 46));
-        console.log(data);
         if (data) {
           setProposalInfoData({
             ...data,
