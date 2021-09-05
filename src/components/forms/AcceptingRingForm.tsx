@@ -135,15 +135,20 @@ const AcceptingRingForm = ({
     try {
       setIsSubmitting(true);
 
+      const provider = getProvider();
+      if (!provider?.publicKey) return;
+
       // Upload JSON to IPFS and get IPFS CID
-      const { data } = await uploadJsonToIpfs({ ...proposalInfo.data, ...d, spouseRing: rings[d.spouseRing] });
+      const { data } = await uploadJsonToIpfs({
+        ...proposalInfo.data,
+        ...d,
+        spouseRing: rings[d.spouseRing],
+        signers: [...(proposalInfo.data?.signers ?? []), provider.publicKey.toBase58()],
+      });
 
       if (!data) {
         throw new Error('IPFS CID was not received!');
       }
-
-      const provider = getProvider();
-      if (!provider?.publicKey) return;
 
       const programIdPublicKey = new PublicKey(config.programId);
 
