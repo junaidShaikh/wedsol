@@ -26,6 +26,7 @@ import config from 'config';
 import getConnection from 'utils/getConnection';
 import getPubKeyFromSeed from 'utils/getPubKeyFromSeed';
 import addAssetData from 'utils/addAssetData';
+import extraData from 'utils/extraData';
 
 const defaultValues = {
   images: [] as string[],
@@ -162,14 +163,24 @@ const AddAssetForm = (): JSX.Element => {
 
       const proposalPubKey = await getPubKeyFromSeed();
 
-      // Upload JSON to IPFS and get IPFS CID
-      const { data } = await uploadJsonToIpfs({ ...defaultValues });
+      // Upload Single Asset JSON to IPFS and get IPFS CID
+      const { data: assetData } = await uploadJsonToIpfs({ ...d });
 
-      if (!data) {
+      if (!assetData) {
         throw new Error('IPFS CID was not received!');
       }
 
-      const instruction = new TransactionInstruction({
+      // Upload full proposalInfo JSON to IPFS and get IPFS CID
+      const { data: updatedProposalInfoData } = await uploadJsonToIpfs({
+        ...snap.proposalInfo.data,
+        assets: [...snap.assets, d],
+      });
+
+      if (!updatedProposalInfoData) {
+        throw new Error('IPFS CID was not received!');
+      }
+
+      const instruction1 = new TransactionInstruction({
         keys: [
           {
             pubkey: provider.publicKey as PublicKey,
@@ -183,9 +194,26 @@ const AddAssetForm = (): JSX.Element => {
           },
         ],
         programId: programIdPublicKey,
-        data: addAssetData(data.cid),
+        data: addAssetData(assetData.cid),
       });
-      const transaction = new Transaction().add(instruction);
+
+      const instruction2 = new TransactionInstruction({
+        keys: [
+          {
+            pubkey: provider.publicKey as PublicKey,
+            isSigner: true,
+            isWritable: false,
+          },
+          {
+            pubkey: proposalPubKey,
+            isSigner: false,
+            isWritable: true,
+          },
+        ],
+        programId: programIdPublicKey,
+        data: extraData(updatedProposalInfoData.cid),
+      });
+      const transaction = new Transaction().add(instruction1, instruction2);
       transaction.feePayer = provider.publicKey;
       (transaction as any).recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
       if (transaction) {
