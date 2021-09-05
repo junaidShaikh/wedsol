@@ -5,8 +5,16 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
 import { format } from 'date-fns';
-
 import { PublicKey, TransactionInstruction, Transaction } from '@solana/web3.js';
+import { useSnapshot } from 'valtio';
+
+import {
+  state,
+  setProposalInfoLoading,
+  setProposalInfoData,
+  setProposalInfoFailure,
+  setProposalInfoError,
+} from 'state';
 
 import Container from 'components/common/wrappers/Container';
 import FlexRowWrapper from 'components/common/wrappers/FlexRowWrapper';
@@ -16,6 +24,7 @@ import FormInput from 'components/form-elements/FormInput';
 import FormTextArea from 'components/form-elements/FormTextArea';
 import SolidButton from 'components/common/SolidButton';
 import Spinner from 'components/common/Spinner';
+import FullPageSpinner from 'components/common/FullPageSpinner';
 
 import { getProvider } from 'utils/getProvider';
 import { uploadJsonToIpfs } from 'apis/ipfs';
@@ -23,6 +32,11 @@ import config from 'config';
 import getConnection from 'utils/getConnection';
 import getPubKeyFromSeed from 'utils/getPubKeyFromSeed';
 import marriageData from 'utils/marriageData';
+import getAccountInfo from 'utils/getAccountInfo';
+import getActualSigners from 'utils/getActualSigners';
+import { fetchIpfsJsonData } from 'apis/ipfs';
+import shortenWalletAddress from 'utils/shortenWalletAddress';
+import extraData from 'utils/extraData';
 
 const defaultValues = {
   marriageDate: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
@@ -96,7 +110,7 @@ const MarriageFormWrapper = styled.div`
 const MarriageForm = (): JSX.Element => {
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-  const { register, watch, handleSubmit } = useForm({
+  const { register, watch, handleSubmit, setValue } = useForm({
     defaultValues,
     resolver: yupResolver(validationSchema),
   });
@@ -106,10 +120,43 @@ const MarriageForm = (): JSX.Element => {
 
   const connection = getConnection();
 
+  const snap = useSnapshot(state);
+
+  React.useEffect(() => {
+    try {
+      (async () => {
+        if (!snap.proposalInfo?.data) {
+          setProposalInfoLoading();
+          const proposalPubKey = await getPubKeyFromSeed();
+          const accountInfo = await getAccountInfo(proposalPubKey);
+          const { data } = await fetchIpfsJsonData(accountInfo?.extra?.substr(0, 46));
+          if (data) {
+            setValue('proposerName', data.proposerName);
+            setValue('spouseName', data.spouseName);
+            setProposalInfoData({
+              ...data,
+              signers: getActualSigners([accountInfo.partner1, accountInfo.partner2]).map((signer) =>
+                shortenWalletAddress(signer, 5)
+              ),
+            });
+          } else {
+            setProposalInfoFailure();
+          }
+        } else {
+          setValue('proposerName', snap.proposalInfo?.data?.proposerName);
+          setValue('spouseName', snap.proposalInfo?.data?.spouseName);
+        }
+      })();
+    } catch (error) {
+      console.log(error);
+      setProposalInfoError(error);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const onSubmit = async (d: typeof defaultValues) => {
     try {
       setIsSubmitting(true);
-      console.log(d);
 
       const provider = getProvider();
       if (!provider?.publicKey) return;
@@ -119,13 +166,13 @@ const MarriageForm = (): JSX.Element => {
       const proposalPubKey = await getPubKeyFromSeed();
 
       // Upload JSON to IPFS and get IPFS CID
-      const { data } = await uploadJsonToIpfs(defaultValues);
+      const { data } = await uploadJsonToIpfs({ ...snap.proposalInfo.data, ...d });
 
       if (!data) {
         throw new Error('IPFS CID was not received!');
       }
 
-      const instruction = new TransactionInstruction({
+      const instruction1 = new TransactionInstruction({
         keys: [
           {
             pubkey: provider.publicKey as PublicKey,
@@ -141,7 +188,24 @@ const MarriageForm = (): JSX.Element => {
         programId: programIdPublicKey,
         data: marriageData(),
       });
-      const transaction = new Transaction().add(instruction);
+
+      const instruction2 = new TransactionInstruction({
+        keys: [
+          {
+            pubkey: provider.publicKey as PublicKey,
+            isSigner: true,
+            isWritable: false,
+          },
+          {
+            pubkey: proposalPubKey,
+            isSigner: false,
+            isWritable: true,
+          },
+        ],
+        programId: programIdPublicKey,
+        data: extraData(data.cid),
+      });
+      const transaction = new Transaction().add(instruction1, instruction2);
       transaction.feePayer = provider.publicKey;
       (transaction as any).recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
       if (transaction) {
@@ -163,6 +227,10 @@ const MarriageForm = (): JSX.Element => {
     }
   };
 
+  if (snap.proposalInfo.isLoading) {
+    return <FullPageSpinner />;
+  }
+
   return (
     <MarriageFormWrapper>
       <Container>
@@ -171,8 +239,13 @@ const MarriageForm = (): JSX.Element => {
             <form onSubmit={handleSubmit(onSubmit)}>
               <FormInput type="datetime-local" placeholder="Pick a date" {...register('marriageDate')} />
               <FlexRowWrapper>
-                <FormInput placeholder="Your name" style={{ marginRight: 10 }} {...register('proposerName')} />
-                <FormInput placeholder="Your spouse's name" style={{ marginLeft: 10 }} {...register('spouseName')} />
+                <FormInput placeholder="Your name" style={{ marginRight: 10 }} {...register('proposerName')} readOnly />
+                <FormInput
+                  placeholder="Your spouse's name"
+                  style={{ marginLeft: 10 }}
+                  {...register('spouseName')}
+                  readOnly
+                />
               </FlexRowWrapper>
               <FormTextArea placeholder="Your vows" {...register('proposerVows')} />
               <FormTextArea placeholder="Your spouse's vows" {...register('spouseVows')} />
@@ -185,12 +258,12 @@ const MarriageForm = (): JSX.Element => {
           <FlexColumnWrapper className="col-2">
             <h4>Preview</h4>
             <MarriagePreview
-              proposerName={formValues.proposerName}
-              spouseName={formValues.spouseName}
-              engagementDate={formValues.marriageDate}
+              proposerName={formValues.proposerName || (snap.proposalInfo?.data?.proposerName as string)}
+              spouseName={formValues.spouseName || (snap.proposalInfo?.data?.spouseName as string)}
+              engagementDate={snap.proposalInfo?.data?.engagementDate as string}
               proposerVows={formValues.proposerVows}
               spouseVows={formValues.spouseVows}
-              qrCodeString="Hello World"
+              qrCodeString={window.location.href}
             />
           </FlexColumnWrapper>
         </FlexRowWrapper>
