@@ -1,5 +1,18 @@
+import * as React from 'react';
 import styled from 'styled-components/macro';
+import { useParams, useHistory, Link } from 'react-router-dom';
 import { IoLink, IoLogoTwitter, IoLogoFacebook } from 'react-icons/io5';
+import { HiExternalLink } from 'react-icons/hi';
+import { useSnapshot } from 'valtio';
+import { PublicKey } from '@solana/web3.js';
+
+import {
+  state,
+  setProposalInfoLoading,
+  setProposalInfoData,
+  setProposalInfoFailure,
+  setProposalInfoError,
+} from 'state';
 
 import Container from 'components/common/wrappers/Container';
 import FlexColumnWrapper from 'components/common/wrappers/FlexColumnWrapper';
@@ -8,6 +21,13 @@ import SectionTitle from 'components/common/SectionTitle';
 import MarriageCertificate from 'components/MarriageCertificate';
 import BlessedByCard from 'components/BlessedByCard';
 import MarriageInfoCard from 'components/MarriageInfoCard';
+import FullPageSpinner from 'components/common/FullPageSpinner';
+
+import getAccountInfo from 'utils/getAccountInfo';
+import getActualSigners from 'utils/getActualSigners';
+import { fetchIpfsJsonData } from 'apis/ipfs';
+import shortenWalletAddress from 'utils/shortenWalletAddress';
+import ConnectWalletButton from 'components/ConnectWalletButton';
 
 const MarriageWrapper = styled.main`
   width: 100%;
@@ -62,6 +82,14 @@ const MarriageWrapper = styled.main`
         line-height: 44px;
 
         color: rgba(0, 0, 0, 0.47);
+
+        display: flex;
+        align-items: center;
+
+        a {
+          text-decoration: none;
+          color: inherit;
+        }
       }
     }
   }
@@ -94,6 +122,44 @@ const MarriageWrapper = styled.main`
 `;
 
 const Marriage = (): JSX.Element => {
+  const snap = useSnapshot(state);
+
+  const { proposalPubKey } = useParams<{ proposalPubKey: string }>();
+  const history = useHistory();
+
+  React.useEffect(() => {
+    try {
+      if (!proposalPubKey) {
+        history.replace('/');
+      }
+
+      (async () => {
+        setProposalInfoLoading();
+        const accountInfo = await getAccountInfo(new PublicKey(proposalPubKey));
+        const { data } = await fetchIpfsJsonData(accountInfo?.extra?.substr(0, 46));
+        console.log(data);
+        if (data) {
+          setProposalInfoData({
+            ...data,
+            signers: getActualSigners([accountInfo.partner1, accountInfo.partner2]).map((signer) =>
+              shortenWalletAddress(signer, 5)
+            ),
+          });
+        } else {
+          setProposalInfoFailure();
+        }
+      })();
+    } catch (error) {
+      console.log(error);
+      setProposalInfoError(error);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (snap.proposalInfo.isLoading) {
+    return <FullPageSpinner />;
+  }
+
   return (
     <MarriageWrapper>
       <Container>
@@ -101,22 +167,30 @@ const Marriage = (): JSX.Element => {
           <FlexColumnWrapper className="col-1">
             <FlexRowWrapper>
               <SectionTitle className="section-title">Blockchain Wedding</SectionTitle>
-              <p>#2343343</p>
+              {/* <p>#2343343</p> */}
+              {snap.isWalletConnected ? (
+                <p>
+                  <Link to="/assets">View Assets</Link>&nbsp;&nbsp;
+                  <HiExternalLink />
+                </p>
+              ) : (
+                <ConnectWalletButton />
+              )}
             </FlexRowWrapper>
             <FlexRowWrapper>
               <MarriageCertificate
-                proposerName="Rahul"
-                spouseName="Priyanka"
-                engagementDate={Date().toString()}
-                proposerVows="Amet minim mollit non deserunt ullamco est sit aliqua dolor do amet sint. Velit officia consequat duis enim velit mollit. Exercitation veniam consequat sunt nostrud amet."
-                spouseVows="Amet minim mollit non deserunt ullamco est sit aliqua dolor do amet sint. Velit officia consequat duis enim velit mollit. Exercitation veniam consequat sunt nostrud amet."
-                qrCodeString="Hello World"
+                proposerName={snap.proposalInfo.data?.proposerName ?? ''}
+                spouseName={snap.proposalInfo.data?.spouseName ?? ''}
+                engagementDate={snap.proposalInfo.data?.marriageDate ?? Date().toString()}
+                proposerVows={snap.proposalInfo.data?.proposerVows ?? ''}
+                spouseVows={snap.proposalInfo.data?.spouseVows ?? ''}
+                qrCodeString={window.location.href}
               />
             </FlexRowWrapper>
           </FlexColumnWrapper>
           <FlexColumnWrapper className="col-2">
             <FlexRowWrapper>
-              <a href="/" target="_blank" rel="noopener noreferrer">
+              <a href={window.location.href} target="_blank" rel="noopener noreferrer">
                 <IoLink />
               </a>
               <a href="/" target="_blank" rel="noopener noreferrer">
@@ -126,7 +200,13 @@ const Marriage = (): JSX.Element => {
                 <IoLogoFacebook />
               </a>
             </FlexRowWrapper>
-            <MarriageInfoCard className="marriage-info-card" showFileDivorceButton={false} />
+            <MarriageInfoCard
+              className="marriage-info-card"
+              proposalPubKey={proposalPubKey}
+              showViewOnExplorer={true}
+              showBlessButton={true}
+              showFileDivorceButton={true}
+            />
             <BlessedByCard
               blessings={[
                 {
