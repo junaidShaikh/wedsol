@@ -60,13 +60,11 @@ const AddImages = ({ className, label, onNewImage }: AddImagesProps): JSX.Elemen
       const file = event.target.files?.[0];
 
       if (file) {
-        console.log(file);
         const formData = new FormData();
         formData.append('file', file);
 
         const { data } = await axios.post<{ url: string }>('https://snft.ocg.technology/files/upload', formData);
         if (data) {
-          console.log(data);
           setImageUrls((prevState) => {
             if (imageUrls.length === 5) {
               onNewImage(prevState);
