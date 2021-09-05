@@ -35,7 +35,6 @@ import marriageData from 'utils/marriageData';
 import getAccountInfo from 'utils/getAccountInfo';
 import getActualSigners from 'utils/getActualSigners';
 import { fetchIpfsJsonData } from 'apis/ipfs';
-import shortenWalletAddress from 'utils/shortenWalletAddress';
 import extraData from 'utils/extraData';
 
 const defaultValues = {
@@ -135,9 +134,7 @@ const MarriageForm = (): JSX.Element => {
             setValue('spouseName', data.spouseName);
             setProposalInfoData({
               ...data,
-              signers: getActualSigners([accountInfo.partner1, accountInfo.partner2]).map((signer) =>
-                shortenWalletAddress(signer, 5)
-              ),
+              signers: getActualSigners([accountInfo.partner1, accountInfo.partner2]),
             });
           } else {
             setProposalInfoFailure();
