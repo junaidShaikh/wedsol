@@ -22,9 +22,9 @@ const Phantom = (): null => {
       // try to eagerly connect
       provider.connect({ onlyIfTrusted: true });
 
-      return () => {
-        provider.disconnect();
-      };
+      // return () => {
+      //   provider.disconnect();
+      // };
     }
   }, [provider]);
 
