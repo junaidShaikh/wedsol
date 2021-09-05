@@ -32,4 +32,26 @@ const state = proxy<State>({
   },
 });
 
-export { state };
+const setProposalInfoLoading = () => {
+  state.proposalInfo.isLoading = true;
+};
+
+const setProposalInfoData = (data: State['proposalInfo']['data']) => {
+  state.proposalInfo.isLoading = false;
+  state.proposalInfo.isSuccess = true;
+  state.proposalInfo.data = data;
+};
+
+const setProposalInfoFailure = () => {
+  state.proposalInfo.isLoading = false;
+  state.proposalInfo.isSuccess = false;
+  state.proposalInfo.data = null;
+};
+
+const setProposalInfoError = (error: any) => {
+  state.proposalInfo.isLoading = false;
+  state.proposalInfo.isSuccess = false;
+  state.proposalInfo.error = error;
+};
+
+export { state, setProposalInfoLoading, setProposalInfoData, setProposalInfoFailure, setProposalInfoError };
