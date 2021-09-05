@@ -3,7 +3,6 @@ import styled from 'styled-components/macro';
 import { useParams, useHistory } from 'react-router-dom';
 import { useSnapshot } from 'valtio';
 import { PublicKey, TransactionInstruction, Transaction } from '@solana/web3.js';
-import { Buffer } from 'buffer';
 
 import { state } from 'state';
 
@@ -21,6 +20,7 @@ import { getProvider } from 'utils/getProvider';
 import { uploadJsonToIpfs } from 'apis/ipfs';
 import config from 'config';
 import getConnection from 'utils/getConnection';
+import divorceData from 'utils/divorceData';
 
 const DivorceFormWrapper = styled.div`
   width: 100%;
@@ -115,13 +115,6 @@ const DivorceForm = (): JSX.Element => {
 
   const connection = getConnection();
 
-  React.useEffect(() => {
-    if (!proposalPubKey) {
-      history.replace('/');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const handleSubmit = async () => {
     try {
       setIsSubmitting(true);
@@ -135,43 +128,37 @@ const DivorceForm = (): JSX.Element => {
       // Upload JSON to IPFS and get IPFS CID
       const { data } = await uploadJsonToIpfs({});
 
-      if (data) {
-        console.log(data);
+      if (!data) {
+        throw new Error('IPFS CID was not received!');
+      }
 
-        const divorceData = Buffer.alloc(64);
-        divorceData[0] = 6;
+      const instruction = new TransactionInstruction({
+        keys: [
+          {
+            pubkey: provider.publicKey as PublicKey,
+            isSigner: true,
+            isWritable: false,
+          },
+          {
+            pubkey: new PublicKey(proposalPubKey),
+            isSigner: false,
+            isWritable: true,
+          },
+        ],
+        programId: programIdPublicKey,
+        data: divorceData(),
+      });
+      const transaction = new Transaction().add(instruction);
+      transaction.feePayer = provider.publicKey;
+      (transaction as any).recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+      if (transaction) {
+        let signed = await provider.signTransaction(transaction);
+        let signature = await connection.sendRawTransaction(signed.serialize());
+        await connection.confirmTransaction(signature);
 
-        const instruction = new TransactionInstruction({
-          keys: [
-            {
-              pubkey: provider.publicKey as PublicKey,
-              isSigner: true,
-              isWritable: false,
-            },
-            {
-              pubkey: new PublicKey(proposalPubKey),
-              isSigner: false,
-              isWritable: true,
-            },
-          ],
-          programId: programIdPublicKey,
-          data: divorceData,
+        history.push({
+          pathname: `/`,
         });
-        const transaction = new Transaction().add(instruction);
-        transaction.feePayer = provider.publicKey;
-        console.log('Getting recent blockhash');
-        (transaction as any).recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
-        if (transaction) {
-          let signed = await provider.signTransaction(transaction);
-          console.log('Got signature, submitting transaction');
-          let signature = await connection.sendRawTransaction(signed.serialize());
-          console.log('Submitted transaction ' + signature + ', awaiting confirmation');
-          await connection.confirmTransaction(signature);
-          console.log('Transaction ' + signature + ' confirmed');
-          history.push({
-            pathname: `/`,
-          });
-        }
       }
     } catch (error: any) {
       console.warn(error);

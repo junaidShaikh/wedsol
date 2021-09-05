@@ -7,7 +7,6 @@ import * as Yup from 'yup';
 import { format } from 'date-fns';
 
 import { PublicKey, TransactionInstruction, Transaction } from '@solana/web3.js';
-import { Buffer } from 'buffer';
 
 import Container from 'components/common/wrappers/Container';
 import FlexRowWrapper from 'components/common/wrappers/FlexRowWrapper';
@@ -22,6 +21,8 @@ import { getProvider } from 'utils/getProvider';
 import { uploadJsonToIpfs } from 'apis/ipfs';
 import config from 'config';
 import getConnection from 'utils/getConnection';
+import getPubKeyFromSeed from 'utils/getPubKeyFromSeed';
+import marriageData from 'utils/marriageData';
 
 const defaultValues = {
   marriageDate: format(new Date(), "yyyy-MM-dd'T'HH:mm"),
@@ -111,57 +112,46 @@ const MarriageForm = (): JSX.Element => {
       console.log(d);
 
       const provider = getProvider();
-
       if (!provider?.publicKey) return;
 
       const programIdPublicKey = new PublicKey(config.programId);
 
-      const proposalPubKey = await PublicKey.createWithSeed(
-        provider.publicKey as PublicKey,
-        'hello',
-        programIdPublicKey
-      );
+      const proposalPubKey = await getPubKeyFromSeed();
 
       // Upload JSON to IPFS and get IPFS CID
-      const { data } = await uploadJsonToIpfs({ ...defaultValues });
+      const { data } = await uploadJsonToIpfs(defaultValues);
 
-      if (data) {
-        console.log(data);
+      if (!data) {
+        throw new Error('IPFS CID was not received!');
+      }
 
-        const marriageData = Buffer.alloc(64);
-        marriageData[0] = 8;
+      const instruction = new TransactionInstruction({
+        keys: [
+          {
+            pubkey: provider.publicKey as PublicKey,
+            isSigner: true,
+            isWritable: false,
+          },
+          {
+            pubkey: proposalPubKey,
+            isSigner: false,
+            isWritable: true,
+          },
+        ],
+        programId: programIdPublicKey,
+        data: marriageData(),
+      });
+      const transaction = new Transaction().add(instruction);
+      transaction.feePayer = provider.publicKey;
+      (transaction as any).recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+      if (transaction) {
+        let signed = await provider.signTransaction(transaction);
+        let signature = await connection.sendRawTransaction(signed.serialize());
+        await connection.confirmTransaction(signature);
 
-        const instruction = new TransactionInstruction({
-          keys: [
-            {
-              pubkey: provider.publicKey as PublicKey,
-              isSigner: true,
-              isWritable: false,
-            },
-            {
-              pubkey: proposalPubKey,
-              isSigner: false,
-              isWritable: true,
-            },
-          ],
-          programId: programIdPublicKey,
-          data: marriageData,
+        history.push({
+          pathname: `/marriage/${proposalPubKey}`,
         });
-        const transaction = new Transaction().add(instruction);
-        transaction.feePayer = provider.publicKey;
-        console.log('Getting recent blockhash');
-        (transaction as any).recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
-        if (transaction) {
-          let signed = await provider.signTransaction(transaction);
-          console.log('Got signature, submitting transaction');
-          let signature = await connection.sendRawTransaction(signed.serialize());
-          console.log('Submitted transaction ' + signature + ', awaiting confirmation');
-          await connection.confirmTransaction(signature);
-          console.log('Transaction ' + signature + ' confirmed');
-          history.push({
-            pathname: `/marriage/${proposalPubKey}`,
-          });
-        }
       }
     } catch (error: any) {
       console.warn(error);
