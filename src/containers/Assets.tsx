@@ -1,6 +1,16 @@
+import * as React from 'react';
 import styled from 'styled-components/macro';
 import { useHistory } from 'react-router-dom';
 import { FaPlus } from 'react-icons/fa';
+import { useSnapshot } from 'valtio';
+
+import {
+  state,
+  setProposalInfoLoading,
+  setProposalInfoData,
+  setProposalInfoFailure,
+  setProposalInfoError,
+} from 'state';
 
 import ConnectedAccountPill from 'components/ConnectedAccountPill';
 import Container from 'components/common/wrappers/Container';
@@ -9,6 +19,12 @@ import FlexRowWrapper from 'components/common/wrappers/FlexRowWrapper';
 import MarriageInfoCard from 'components/MarriageInfoCard';
 import SolidButton from 'components/common/SolidButton';
 import AssetCard from 'components/AssetCard';
+import FullPageSpinner from 'components/common/FullPageSpinner';
+
+import getAccountInfo from 'utils/getAccountInfo';
+import getActualSigners from 'utils/getActualSigners';
+import { fetchIpfsJsonData } from 'apis/ipfs';
+import getPubKeyFromSeed from 'utils/getPubKeyFromSeed';
 
 const AssetsWrapper = styled.main`
   width: 100%;
@@ -83,6 +99,15 @@ const AssetsWrapper = styled.main`
       }
     }
 
+    .no-assets {
+      font-weight: normal;
+      font-size: 24px;
+      line-height: 40px;
+      margin: 0 auto;
+
+      color: #000000;
+    }
+
     .asset-card {
       margin-bottom: 20px;
 
@@ -110,7 +135,50 @@ const AssetsWrapper = styled.main`
 `;
 
 const Assets = (): JSX.Element => {
+  const [assets, setAssets] = React.useState([]);
+
   const history = useHistory();
+
+  const snap = useSnapshot(state);
+
+  React.useEffect(() => {
+    try {
+      (async () => {
+        setProposalInfoLoading();
+        const proposalPubKey = await getPubKeyFromSeed();
+        const accountInfo = await getAccountInfo(proposalPubKey);
+        console.log(accountInfo);
+
+        if (accountInfo === null) {
+          setAssets([]);
+          setProposalInfoFailure();
+          return;
+        }
+
+        setAssets(accountInfo.assets);
+
+        const { data } = await fetchIpfsJsonData(accountInfo?.extra?.substr(0, 46));
+        console.log(data);
+        if (data) {
+          setProposalInfoData({
+            ...data,
+            signers: getActualSigners([accountInfo.partner1, accountInfo.partner2]),
+            assets,
+          });
+        } else {
+          setProposalInfoFailure();
+        }
+      })();
+    } catch (error) {
+      console.log(error);
+      setProposalInfoError(error);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (snap.proposalInfo.isLoading) {
+    return <FullPageSpinner />;
+  }
 
   return (
     <AssetsWrapper>
@@ -126,34 +194,20 @@ const Assets = (): JSX.Element => {
               </SolidButton>
             </FlexRowWrapper>
             <FlexColumnWrapper>
-              <AssetCard
-                className="asset-card"
-                assetName="New York House"
-                assetDescription="Our House in New York"
-                assetValue="$1.5M"
-                assetOwnershipPercentage="50:50"
-              />
-              <AssetCard
-                className="asset-card"
-                assetName="New York House"
-                assetDescription="Our House in New York"
-                assetValue="$1.5M"
-                assetOwnershipPercentage="50:50"
-              />
-              <AssetCard
-                className="asset-card"
-                assetName="New York House"
-                assetDescription="Our House in New York"
-                assetValue="$1.5M"
-                assetOwnershipPercentage="50:50"
-              />
-              <AssetCard
-                className="asset-card"
-                assetName="New York House"
-                assetDescription="Our House in New York"
-                assetValue="$1.5M"
-                assetOwnershipPercentage="50:50"
-              />
+              {assets.length ? (
+                assets.map((_, i) => (
+                  <AssetCard
+                    key={i}
+                    className="asset-card"
+                    assetName="New York House"
+                    assetDescription="Our House in New York"
+                    assetValue="$1.5M"
+                    assetOwnershipPercentage="50:50"
+                  />
+                ))
+              ) : (
+                <p className="no-assets">No Assets found!</p>
+              )}
             </FlexColumnWrapper>
           </FlexColumnWrapper>
           <FlexColumnWrapper className="col-2">
