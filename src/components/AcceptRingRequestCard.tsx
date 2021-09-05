@@ -11,6 +11,8 @@ import FlexRowWrapper from 'components/common/wrappers/FlexRowWrapper';
 import SolidButton from 'components/common/SolidButton';
 import ConnectWalletButton from 'components/ConnectWalletButton';
 
+import shortenWalletAddress from 'utils/shortenWalletAddress';
+
 import accountPlaceholder from 'assets/images/account-placeholder.png';
 
 const AcceptRingRequestCardWrapper = styled.div`
@@ -223,14 +225,12 @@ const AcceptRingRequestCard = ({
               <p className="signed-by">Signed By</p>
             </FlexRowWrapper>
             <FlexRowWrapper>
-              {signedBy
-                .filter((signer) => Boolean(signer))
-                .map((signer, i) => (
-                  <FlexRowWrapper key={i} className="signer">
-                    <img src={accountPlaceholder} alt="" />
-                    <p>{signer}</p>
-                  </FlexRowWrapper>
-                ))}
+              {signedBy.map((signer, i) => (
+                <FlexRowWrapper key={i} className="signer">
+                  <img src={accountPlaceholder} alt="" />
+                  <p>{shortenWalletAddress(signer, 5)}</p>
+                </FlexRowWrapper>
+              ))}
             </FlexRowWrapper>
           </FlexColumnWrapper>
           <FlexColumnWrapper>
