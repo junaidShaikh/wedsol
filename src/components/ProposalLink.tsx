@@ -10,6 +10,7 @@ const ProposalLinkWrapper = styled.div`
 
   & > ${FlexRowWrapper} {
     justify-content: space-between;
+    align-items: center;
 
     & > svg {
       width: 24px;
@@ -17,11 +18,13 @@ const ProposalLinkWrapper = styled.div`
     }
 
     & > p {
+      max-width: 90%;
       font-weight: 500;
-      font-size: 21px;
+      font-size: 18px;
       line-height: 25px;
 
       color: rgba(6, 6, 6, 0.4);
+      word-break: break-all;
     }
   }
 `;
