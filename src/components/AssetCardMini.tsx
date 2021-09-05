@@ -64,6 +64,7 @@ const AssetCardMiniWrapper = styled.div`
 
 interface AssetCardMiniProps {
   className?: string;
+  assetImage?: string;
   assetName: string;
   assetDescription: string;
   assetValue: string | number;
@@ -72,6 +73,7 @@ interface AssetCardMiniProps {
 
 const AssetCardMini = ({
   className,
+  assetImage = '',
   assetName,
   assetDescription,
   assetValue,
@@ -80,7 +82,7 @@ const AssetCardMini = ({
   return (
     <AssetCardMiniWrapper className={clsx(className)}>
       <div className="card-grid">
-        <img src="" alt="" />
+        <img src={assetImage} alt="" />
         <FlexColumnWrapper>
           <h3>{assetName}</h3>
           <p>{assetDescription}</p>
