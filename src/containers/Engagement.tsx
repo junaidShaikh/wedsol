@@ -24,7 +24,6 @@ import rings from 'components/common/rings';
 import getAccountInfo from 'utils/getAccountInfo';
 import getActualSigners from 'utils/getActualSigners';
 import { fetchIpfsJsonData } from 'apis/ipfs';
-import shortenWalletAddress from 'utils/shortenWalletAddress';
 
 const EngagementWrapper = styled.main`
   width: 100%;
@@ -86,9 +85,7 @@ const Engagement = (): JSX.Element => {
         if (data) {
           setProposalInfoData({
             ...data,
-            signers: getActualSigners([accountInfo.partner1, accountInfo.partner2]).map((signer) =>
-              shortenWalletAddress(signer, 5)
-            ),
+            signers: getActualSigners([accountInfo.partner1, accountInfo.partner2]),
           });
         } else {
           setProposalInfoFailure();
