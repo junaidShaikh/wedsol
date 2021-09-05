@@ -5,7 +5,6 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
 import { PublicKey, TransactionInstruction, Transaction, SystemProgram } from '@solana/web3.js';
-import { Buffer } from 'buffer';
 
 import Container from 'components/common/wrappers/Container';
 import FlexRowWrapper from 'components/common/wrappers/FlexRowWrapper';
@@ -23,6 +22,9 @@ import { getProvider } from 'utils/getProvider';
 import { uploadJsonToIpfs } from 'apis/ipfs';
 import config from 'config';
 import getConnection from 'utils/getConnection';
+import getPubKeyFromSeed from 'utils/getPubKeyFromSeed';
+import proposalData from 'utils/proposalData';
+import extraData from 'utils/extraData';
 
 const defaultValues = {
   proposerName: '',
@@ -35,7 +37,7 @@ const validationSchema = Yup.object({
   proposerName: Yup.string().required(),
   spouseName: Yup.string().required(),
   message: Yup.string().required(),
-  proposerRing: Yup.number().positive().integer().required(),
+  proposerRing: Yup.number().required(),
 }).required();
 
 const SendNftRingFormWrapper = styled.div`
@@ -107,90 +109,92 @@ const SendNftRingForm = (): JSX.Element => {
   const onSubmit = async (d: typeof defaultValues) => {
     try {
       setIsSubmitting(true);
-      console.log(d);
 
-      // Upload JSON to IPFS and get IPFS CID
+      /**
+       * Upload JSON to IPFS and get IPFS CID
+       */
       const { data } = await uploadJsonToIpfs({ ...d, proposerRing: rings[d.proposerRing] });
 
-      if (data) {
-        console.log(data);
+      if (!data) {
+        throw new Error('IPFS CID not received!');
+      }
 
-        const provider = getProvider();
+      const provider = getProvider();
+      if (!provider?.publicKey) return;
 
-        if (!provider?.publicKey) return;
+      const programIdPublicKey = new PublicKey(config.programId);
 
-        const programIdPublicKey = new PublicKey(config.programId);
+      /**
+       * Get Seed Derived Public Key. Unique for each wallet address. Seed phrase and program id remain constant.
+       */
+      const proposalPubKey = await getPubKeyFromSeed();
 
-        const programPubKey = await PublicKey.createWithSeed(
-          provider.publicKey as PublicKey,
-          'hello',
-          programIdPublicKey
-        );
-        const lamports = await connection.getMinimumBalanceForRentExemption(15 * 1024);
-        let transaction = new Transaction().add(
-          SystemProgram.createAccountWithSeed({
-            fromPubkey: provider.publicKey,
-            basePubkey: provider.publicKey,
-            seed: 'hello',
-            newAccountPubkey: programPubKey,
-            lamports,
-            space: 15 * 1024,
-            programId: programIdPublicKey,
-          })
-        );
-        transaction.feePayer = provider.publicKey;
-        console.log('Getting recent blockhash');
-        (transaction as any).recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
-        if (transaction) {
-          let signed = await provider.signTransaction(transaction);
-          console.log('Got signature, submitting transaction');
-          let signature = await connection.sendRawTransaction(signed.serialize());
-          console.log('Submitted transaction ' + signature + ', awaiting confirmation');
-          await connection.confirmTransaction(signature);
-          console.log('Transaction ' + signature + ' confirmed');
-        }
+      /**
+       * Create new account using this pub key and seed on the blockchain.
+       */
+      const lamports = await connection.getMinimumBalanceForRentExemption(15 * 1024);
 
-        let proposalData = '';
-        proposalData += '\x04';
-        proposalData += data.cid;
+      const instruction1 = SystemProgram.createAccountWithSeed({
+        fromPubkey: provider.publicKey,
+        basePubkey: provider.publicKey,
+        seed: 'hello',
+        newAccountPubkey: proposalPubKey,
+        lamports,
+        space: 15 * 1024,
+        programId: programIdPublicKey,
+      });
 
-        const instruction = new TransactionInstruction({
-          keys: [
-            {
-              pubkey: provider.publicKey as PublicKey,
-              isSigner: true,
-              isWritable: false,
-            },
-            {
-              pubkey: programPubKey,
-              isSigner: false,
-              isWritable: true,
-            },
-          ],
-          programId: programIdPublicKey,
-          data: Buffer.from(proposalData, 'utf-8'),
+      const instruction2 = new TransactionInstruction({
+        keys: [
+          {
+            pubkey: provider.publicKey as PublicKey,
+            isSigner: true,
+            isWritable: false,
+          },
+          {
+            pubkey: proposalPubKey,
+            isSigner: false,
+            isWritable: true,
+          },
+        ],
+        programId: programIdPublicKey,
+        data: proposalData(data.cid),
+      });
+
+      const instruction3 = new TransactionInstruction({
+        keys: [
+          {
+            pubkey: provider.publicKey as PublicKey,
+            isSigner: true,
+            isWritable: false,
+          },
+          {
+            pubkey: proposalPubKey,
+            isSigner: false,
+            isWritable: true,
+          },
+        ],
+        programId: programIdPublicKey,
+        data: extraData(data.cid),
+      });
+
+      const transaction = new Transaction().add(instruction1, instruction2, instruction3);
+      transaction.feePayer = provider.publicKey;
+      (transaction as any).recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+      if (transaction) {
+        let signed = await provider.signTransaction(transaction);
+        let signature = await connection.sendRawTransaction(signed.serialize());
+        await connection.confirmTransaction(signature);
+
+        history.push({
+          pathname: `/proposal/${proposalPubKey.toBase58()}/created`,
+          state: {
+            proposalTransaction: signature,
+            spouseName: d.spouseName,
+            message: d.message,
+            proposerRing: d.proposerRing,
+          },
         });
-        transaction = new Transaction().add(instruction);
-        transaction.feePayer = provider.publicKey;
-        console.log('Getting recent blockhash');
-        (transaction as any).recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
-        if (transaction) {
-          let signed = await provider.signTransaction(transaction);
-          console.log('Got signature, submitting transaction');
-          let signature = await connection.sendRawTransaction(signed.serialize());
-          console.log('Submitted transaction ' + signature + ', awaiting confirmation');
-          await connection.confirmTransaction(signature);
-          console.log('Transaction ' + signature + ' confirmed');
-          history.push({
-            pathname: `/proposal/${programPubKey.toBase58()}/created`,
-            state: {
-              proposalTransaction: signature,
-              spouseName: d.spouseName,
-              message: d.message,
-              proposerRing: d.proposerRing,
-            },
-          });
-        }
       }
     } catch (error: any) {
       console.warn(error);
