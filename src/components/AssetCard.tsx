@@ -1,7 +1,7 @@
 import styled from 'styled-components/macro';
 import clsx from 'clsx';
 import { FiMoreVertical } from 'react-icons/fi';
-import { GrDocumentText } from 'react-icons/gr';
+// import { GrDocumentText } from 'react-icons/gr';
 
 import FlexColumnWrapper from './common/wrappers/FlexColumnWrapper';
 
@@ -97,7 +97,7 @@ const AssetCardWrapper = styled.div`
       }
     }
 
-    .view-terms {
+    /* .view-terms {
       width: 137px;
       display: flex;
       align-items: center;
@@ -118,7 +118,7 @@ const AssetCardWrapper = styled.div`
         color: #000000;
         text-transform: uppercase;
       }
-    }
+    } */
   }
 `;
 
@@ -158,10 +158,10 @@ const AssetCard = ({
           <div className="approved-pill">
             <p>Approved</p>
           </div>
-          <div className="view-terms">
+          {/* <div className="view-terms">
             <GrDocumentText />
             <p>View Terms</p>
-          </div>
+          </div> */}
         </FlexColumnWrapper>
       </div>
     </AssetCardWrapper>
