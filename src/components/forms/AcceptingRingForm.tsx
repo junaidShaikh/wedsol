@@ -5,7 +5,6 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
 import { PublicKey, TransactionInstruction, Transaction } from '@solana/web3.js';
-import { Buffer } from 'buffer';
 import { useSnapshot } from 'valtio';
 
 import { state } from 'state';
@@ -24,12 +23,16 @@ import { getProvider } from 'utils/getProvider';
 import { uploadJsonToIpfs } from 'apis/ipfs';
 import config from 'config';
 import getConnection from 'utils/getConnection';
+import weddingData from 'utils/weddingData';
+import extraData from 'utils/extraData';
 
 const defaultValues = {
+  engagementDate: Date().toString(),
   spouseRing: 0,
 };
 
 const validationSchema = Yup.object({
+  engagementDate: Yup.string().required(),
   spouseRing: Yup.number().required(),
 }).required();
 
@@ -116,6 +119,7 @@ const AcceptingRingForm = ({
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   const { proposalPubKey } = useParams<{ proposalPubKey: string }>();
+  const history = useHistory();
 
   const { watch, handleSubmit, setValue } = useForm({
     defaultValues,
@@ -123,71 +127,70 @@ const AcceptingRingForm = ({
   });
   const formValues = watch(['spouseRing']);
 
-  const history = useHistory();
-
   const { proposalInfo } = useSnapshot(state);
 
   const connection = getConnection();
 
-  React.useEffect(() => {
-    if (!proposalPubKey) {
-      return history.replace('/');
-    }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
   const onSubmit = async (d: typeof defaultValues) => {
     try {
       setIsSubmitting(true);
-      console.log(d);
 
       // Upload JSON to IPFS and get IPFS CID
-      const { data } = await uploadJsonToIpfs({ ...proposalInfo.data, spouseRing: rings[d.spouseRing] });
+      const { data } = await uploadJsonToIpfs({ ...proposalInfo.data, ...d, spouseRing: rings[d.spouseRing] });
 
-      if (data) {
-        console.log(data);
+      if (!data) {
+        throw new Error('IPFS CID was not received!');
+      }
 
-        const provider = getProvider();
+      const provider = getProvider();
+      if (!provider?.publicKey) return;
 
-        if (!provider?.publicKey) return;
+      const programIdPublicKey = new PublicKey(config.programId);
 
-        const programIdPublicKey = new PublicKey(config.programId);
+      const instruction1 = new TransactionInstruction({
+        keys: [
+          {
+            pubkey: provider.publicKey as PublicKey,
+            isSigner: true,
+            isWritable: false,
+          },
+          {
+            pubkey: new PublicKey(proposalPubKey),
+            isSigner: false,
+            isWritable: true,
+          },
+        ],
+        programId: programIdPublicKey,
+        data: weddingData(),
+      });
 
-        const weddingData = Buffer.alloc(64);
-        weddingData[0] = 1;
+      const instruction2 = new TransactionInstruction({
+        keys: [
+          {
+            pubkey: provider.publicKey as PublicKey,
+            isSigner: true,
+            isWritable: false,
+          },
+          {
+            pubkey: new PublicKey(proposalPubKey),
+            isSigner: false,
+            isWritable: true,
+          },
+        ],
+        programId: programIdPublicKey,
+        data: extraData(data.cid),
+      });
+      const transaction = new Transaction().add(instruction1, instruction2);
+      transaction.feePayer = provider.publicKey;
+      (transaction as any).recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
+      if (transaction) {
+        let signed = await provider.signTransaction(transaction);
+        let signature = await connection.sendRawTransaction(signed.serialize());
+        await connection.confirmTransaction(signature);
 
-        const instruction = new TransactionInstruction({
-          keys: [
-            {
-              pubkey: provider.publicKey as PublicKey,
-              isSigner: true,
-              isWritable: false,
-            },
-            {
-              pubkey: new PublicKey(proposalPubKey),
-              isSigner: false,
-              isWritable: true,
-            },
-          ],
-          programId: programIdPublicKey,
-          data: weddingData,
+        history.push({
+          pathname: `/engagement/${proposalPubKey}`,
         });
-        const transaction = new Transaction().add(instruction);
-        transaction.feePayer = provider.publicKey;
-        console.log('Getting recent blockhash');
-        (transaction as any).recentBlockhash = (await connection.getRecentBlockhash()).blockhash;
-        if (transaction) {
-          let signed = await provider.signTransaction(transaction);
-          console.log('Got signature, submitting transaction');
-          let signature = await connection.sendRawTransaction(signed.serialize());
-          console.log('Submitted transaction ' + signature + ', awaiting confirmation');
-          await connection.confirmTransaction(signature);
-          console.log('Transaction ' + signature + ' confirmed');
-          history.push({
-            pathname: `/engagement/${proposalPubKey}`,
-          });
-        }
       }
     } catch (error: any) {
       console.warn(error);
