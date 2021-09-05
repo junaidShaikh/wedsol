@@ -7,7 +7,14 @@ import * as Yup from 'yup';
 import { useSnapshot } from 'valtio';
 import { PublicKey, TransactionInstruction, Transaction } from '@solana/web3.js';
 
-import { state } from 'state';
+import {
+  state,
+  setProposalInfoLoading,
+  setProposalInfoData,
+  setProposalInfoFailure,
+  setProposalInfoError,
+  setAssetsData,
+} from 'state';
 
 import Container from 'components/common/wrappers/Container';
 import FlexRowWrapper from 'components/common/wrappers/FlexRowWrapper';
@@ -18,12 +25,15 @@ import ProposalLink from 'components/ProposalLink';
 import SignerCard from 'components/SignerCard';
 import Spinner from 'components/common/Spinner';
 import ConnectWalletButton from 'components/ConnectWalletButton';
+import FullPageSpinner from 'components/common/FullPageSpinner';
 
 import { getProvider } from 'utils/getProvider';
-import { uploadJsonToIpfs } from 'apis/ipfs';
+import { fetchIpfsJsonData, uploadJsonToIpfs } from 'apis/ipfs';
 import config from 'config';
 import getConnection from 'utils/getConnection';
 import approveAssetData from 'utils/approveAssetData';
+import getAccountInfo from 'utils/getAccountInfo';
+import getActualSigners from 'utils/getActualSigners';
 
 const defaultValues = {
   percentageSplit: null,
@@ -223,10 +233,38 @@ const ApproveAssetForm = (): JSX.Element => {
 
   const connection = getConnection();
 
+  React.useEffect(() => {
+    try {
+      (async () => {
+        setProposalInfoLoading();
+        const accountInfo = await getAccountInfo(new PublicKey(proposalPubKey));
+
+        if (accountInfo === null) {
+          setProposalInfoFailure();
+          return;
+        }
+
+        const { data } = await fetchIpfsJsonData(accountInfo?.extra?.substr(0, 46));
+        if (data) {
+          setAssetsData(data.assets);
+          setProposalInfoData({
+            ...data,
+            signers: getActualSigners([accountInfo.partner1, accountInfo.partner2]),
+          });
+        } else {
+          setProposalInfoFailure();
+        }
+      })();
+    } catch (error) {
+      console.log(error);
+      setProposalInfoError(error);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const onSubmit = async (d: typeof defaultValues) => {
     try {
       setIsSubmitting(true);
-      console.log(d);
 
       const provider = getProvider();
 
@@ -266,7 +304,7 @@ const ApproveAssetForm = (): JSX.Element => {
         await connection.confirmTransaction(signature);
 
         history.push({
-          pathname: `/divorce/${proposalPubKey}`,
+          pathname: `/`,
         });
       }
     } catch (error: any) {
@@ -278,6 +316,10 @@ const ApproveAssetForm = (): JSX.Element => {
       setIsSubmitting(false);
     }
   };
+
+  if (snap.proposalInfo.isLoading) {
+    return <FullPageSpinner />;
+  }
 
   return (
     <ApproveAssetFormWrapper>
@@ -355,7 +397,7 @@ const ApproveAssetForm = (): JSX.Element => {
           </FlexColumnWrapper>
           <FlexColumnWrapper className="col-2">
             <Container>
-              <ProposalLink link={`${window.location.origin}/proposal/1`} />
+              <ProposalLink link={window.location.href} />
               <h4>Signed By</h4>
               <SignerCard
                 signerName="Rahul Kumar"
@@ -363,8 +405,9 @@ const ApproveAssetForm = (): JSX.Element => {
               />
               <h4>Waiting For</h4>
               <SignerCard
-                signerName="Priyanka Bedi"
-                signerAccountAddress="FnPXxM4KsAbakgtAkXYVSvuQ8Pmv5b5eeP3APTPM6fhd"
+                className="signer-card"
+                signerName={snap.proposalInfo.data?.spouseName ?? ''}
+                signerAccountAddress={snap.proposalInfo.data?.signers[1] ?? ''}
               />
             </Container>
           </FlexColumnWrapper>
