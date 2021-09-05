@@ -4,8 +4,10 @@ import { useHistory } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
-
 import { PublicKey, TransactionInstruction, Transaction } from '@solana/web3.js';
+import { useSnapshot } from 'valtio';
+
+import { state } from 'state';
 
 import Container from 'components/common/wrappers/Container';
 import FlexRowWrapper from 'components/common/wrappers/FlexRowWrapper';
@@ -121,6 +123,14 @@ const AddAssetFormWrapper = styled.div`
 
       color: rgba(0, 0, 0, 0.41);
     }
+
+    .signer-card {
+      margin-bottom: 20px;
+
+      &:last-of-type {
+        margin-bottom: 0;
+      }
+    }
   }
 `;
 
@@ -136,12 +146,13 @@ const AddAssetForm = (): JSX.Element => {
 
   const history = useHistory();
 
+  const snap = useSnapshot(state);
+
   const connection = getConnection();
 
   const onSubmit = async (d: typeof defaultValues) => {
     try {
       setIsSubmitting(true);
-      console.log(d);
 
       const provider = getProvider();
 
@@ -183,7 +194,7 @@ const AddAssetForm = (): JSX.Element => {
         await connection.confirmTransaction(signature);
 
         history.push({
-          pathname: `/approve-asset/${proposalPubKey}/${data.cid}`,
+          pathname: `/assets`,
         });
       }
     } catch (error: any) {
@@ -249,16 +260,18 @@ const AddAssetForm = (): JSX.Element => {
           </FlexColumnWrapper>
           <FlexColumnWrapper className="col-2">
             <Container>
-              <ProposalLink link={`${window.location.origin}/proposal/1`} />
+              <ProposalLink link={window.location.href} />
               <h4>Signed By</h4>
-              <SignerCard
-                signerName="Rahul Kumar"
-                signerAccountAddress="FnPXxM4KsAbakgtAkXYVSvuQ8Pmv5b5eeP3APTPM6fhd"
-              />
               <h4>Waiting For</h4>
               <SignerCard
-                signerName="Priyanka Bedi"
-                signerAccountAddress="FnPXxM4KsAbakgtAkXYVSvuQ8Pmv5b5eeP3APTPM6fhd"
+                className="signer-card"
+                signerName={snap.proposalInfo.data?.proposerName ?? ''}
+                signerAccountAddress={snap.proposalInfo.data?.signers[0] ?? ''}
+              />
+              <SignerCard
+                className="signer-card"
+                signerName={snap.proposalInfo.data?.spouseName ?? ''}
+                signerAccountAddress={snap.proposalInfo.data?.signers[1] ?? ''}
               />
             </Container>
           </FlexColumnWrapper>
