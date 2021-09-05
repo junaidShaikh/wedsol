@@ -1,7 +1,10 @@
 import styled from 'styled-components/macro';
 import clsx from 'clsx';
 import { FiMoreVertical } from 'react-icons/fi';
-// import { GrDocumentText } from 'react-icons/gr';
+import { MdContentCopy } from 'react-icons/md';
+import { FaCheckCircle } from 'react-icons/fa';
+
+import { useClipboard } from 'use-clipboard-copy';
 
 import FlexColumnWrapper from './common/wrappers/FlexColumnWrapper';
 
@@ -39,6 +42,7 @@ const AssetCardWrapper = styled.div`
       height: 79px;
 
       background: #edeeef;
+      object-fit: cover;
     }
 
     .asset-name {
@@ -97,7 +101,7 @@ const AssetCardWrapper = styled.div`
       }
     }
 
-    /* .view-terms {
+    .view-terms {
       width: 137px;
       display: flex;
       align-items: center;
@@ -116,14 +120,17 @@ const AssetCardWrapper = styled.div`
         line-height: 17px;
 
         color: #000000;
-        text-transform: uppercase;
+        text-transform: capitalize;
       }
-    } */
+    }
   }
 `;
 
 interface AssetCardProps {
   className?: string;
+  assetIpfsCid: string;
+  proposalPubKey: string;
+  assetImage?: string;
   assetName: string;
   assetDescription: string;
   assetValue: string;
@@ -132,16 +139,23 @@ interface AssetCardProps {
 
 const AssetCard = ({
   className,
+  assetIpfsCid,
+  proposalPubKey,
+  assetImage = '',
   assetName,
   assetDescription,
   assetValue,
   assetOwnershipPercentage,
 }: AssetCardProps): JSX.Element => {
+  const clipboard = useClipboard({
+    copiedTimeout: 2000, // timeout duration in milliseconds
+  });
+
   return (
     <AssetCardWrapper className={clsx(className)}>
       <FiMoreVertical className="more" />
       <div className="asset-card-grid">
-        <img src="" alt="" />
+        <img src={assetImage} alt="" />
         <FlexColumnWrapper>
           <p className="asset-name">{assetName}</p>
           <p className="asset-description">{assetDescription}</p>
@@ -158,10 +172,15 @@ const AssetCard = ({
           <div className="approved-pill">
             <p>Approved</p>
           </div>
-          {/* <div className="view-terms">
-            <GrDocumentText />
-            <p>View Terms</p>
-          </div> */}
+          <div
+            className="view-terms"
+            onClick={() => {
+              clipboard.copy(`${window.location.origin}/approve-asset/${proposalPubKey}/${assetIpfsCid}`);
+            }}
+          >
+            {clipboard.copied ? <FaCheckCircle style={{ color: 'green' }} /> : <MdContentCopy />}
+            <p>Approval Link</p>
+          </div>
         </FlexColumnWrapper>
       </div>
     </AssetCardWrapper>
