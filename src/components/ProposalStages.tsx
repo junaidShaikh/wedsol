@@ -65,13 +65,24 @@ const ProposalStagesWrapper = styled.div`
   }
 `;
 
-const ProposalStages = (): JSX.Element => {
+interface ProposalStagesProps {
+  disableProposalFlow?: boolean;
+  disableMarriageFlow?: boolean;
+}
+
+const ProposalStages = ({
+  disableProposalFlow = false,
+  disableMarriageFlow = false,
+}: ProposalStagesProps): JSX.Element => {
   const history = useHistory();
 
   return (
     <ProposalStagesWrapper>
       <FlexRowWrapper>
-        <FlexColumnWrapper onClick={() => history.push('/proposal/new')}>
+        <FlexColumnWrapper
+          onClick={() => (disableProposalFlow ? {} : history.push('/proposal/new'))}
+          style={{ cursor: disableProposalFlow ? 'not-allowed' : 'pointer' }}
+        >
           <FlexRowWrapper>
             <img src={sendARing} alt="" className="send-a-ring-image" />
             <div>
@@ -80,7 +91,10 @@ const ProposalStages = (): JSX.Element => {
             </div>
           </FlexRowWrapper>
         </FlexColumnWrapper>
-        <FlexColumnWrapper onClick={() => history.push('/marriage/new')}>
+        <FlexColumnWrapper
+          onClick={() => (disableMarriageFlow ? {} : history.push('/marriage/new'))}
+          style={{ cursor: disableMarriageFlow ? 'not-allowed' : 'pointer' }}
+        >
           <FlexRowWrapper>
             <img src={registerMarriage} alt="" className="register-marriage-image" />
             <div>
