@@ -21,6 +21,15 @@ interface State {
       spouseVows: string;
     } | null;
   };
+  assets: {
+    images: string[];
+    assetName: string;
+    assetDescription: string;
+    assetValue: string;
+    assetTerms: string;
+    percentageSplit: number;
+    percentageIncaseOfDivorce: number;
+  }[];
 }
 
 const state = proxy<State>({
@@ -33,6 +42,7 @@ const state = proxy<State>({
     error: null,
     data: null,
   },
+  assets: [],
 });
 
 const setProposalInfoLoading = () => {
@@ -57,4 +67,25 @@ const setProposalInfoError = (error: any) => {
   state.proposalInfo.error = error;
 };
 
-export { state, setProposalInfoLoading, setProposalInfoData, setProposalInfoFailure, setProposalInfoError };
+const setAssetsData = (
+  data: {
+    images: string[];
+    assetName: string;
+    assetDescription: string;
+    assetValue: string;
+    assetTerms: string;
+    percentageSplit: number;
+    percentageIncaseOfDivorce: number;
+  }[]
+) => {
+  state.assets = data;
+};
+
+export {
+  state,
+  setProposalInfoLoading,
+  setProposalInfoData,
+  setProposalInfoFailure,
+  setProposalInfoError,
+  setAssetsData,
+};
