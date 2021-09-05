@@ -5,6 +5,8 @@ import { FaWallet } from 'react-icons/fa';
 import { MdContentCopy } from 'react-icons/md';
 import { AiOutlineDelete } from 'react-icons/ai';
 
+import config from 'config';
+
 import FlexColumnWrapper from './common/wrappers/FlexColumnWrapper';
 import FlexRowWrapper from './common/wrappers/FlexRowWrapper';
 import CopyText from './CopyText';
@@ -144,12 +146,16 @@ const MarriageInfoCardWrapper = styled.div`
 
 interface MarriageInfoCardProps {
   className?: string;
+  proposalPubKey?: string;
+  showViewOnExplorer?: boolean;
   showBlessButton?: boolean;
   showFileDivorceButton?: boolean;
 }
 
 const MarriageInfoCard = ({
   className,
+  proposalPubKey = '',
+  showViewOnExplorer = true,
   showBlessButton = true,
   showFileDivorceButton = true,
 }: MarriageInfoCardProps): JSX.Element => {
@@ -157,26 +163,37 @@ const MarriageInfoCard = ({
 
   return (
     <MarriageInfoCardWrapper className={clsx(className)}>
-      <CopyText className="copy-text" text={`${window.location.origin}/proposal/1`} />
-      <BlockConfirmations className="block-confirmations" confirmedBlocks={190} totalBlocks={290} />
+      <CopyText className="copy-text" text={window.location.href} />
+      <BlockConfirmations
+        className="block-confirmations"
+        confirmedBlocks={Math.ceil(Math.random() * 290)}
+        totalBlocks={290}
+      />
       <FlexColumnWrapper>
         <FlexRowWrapper>
           <p>Contract</p>
         </FlexRowWrapper>
         <FlexRowWrapper>
           <MdContentCopy />
-          <p>{shortenWalletAddress('FnPXxM4KsAbakgtAkXYVSvuQ8Pmv5b5eeP3APTPM6fhd', 10)}</p>
+          <p>{shortenWalletAddress(config.programId, 10)}</p>
         </FlexRowWrapper>
       </FlexColumnWrapper>
-      <ViewOnExplorer className="view-on-explorer" onClick={() => history.push('/assets')} />
+      {showViewOnExplorer ? (
+        <ViewOnExplorer
+          className="view-on-explorer"
+          href={`https://explorer.solana.com/address/${config.programId}?cluster=${config.solanaNetwork}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        />
+      ) : null}
       {showBlessButton ? (
-        <SolidButton className="solid-button">
+        <SolidButton className="solid-button" style={{ cursor: 'not-allowed' }}>
           <FaWallet />
           Send $SOL to Bless
         </SolidButton>
       ) : null}
       {showFileDivorceButton ? (
-        <SolidButton className="solid-button red" onClick={() => history.push('/divorce')}>
+        <SolidButton className="solid-button red" onClick={() => history.push(`/divorce/${proposalPubKey}`)}>
           <AiOutlineDelete />
           File for divorce
         </SolidButton>
