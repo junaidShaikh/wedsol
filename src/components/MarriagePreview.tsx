@@ -136,7 +136,7 @@ const MarriagePreview = ({
         </FlexRowWrapper>
         <FlexRowWrapper className="row-2">
           <h1>
-            {proposerName || 'Rahul'} & {spouseName || 'Priyanka'}
+            {proposerName} & {spouseName}
           </h1>
         </FlexRowWrapper>
         <FlexRowWrapper className="row-3">
@@ -147,18 +147,12 @@ const MarriagePreview = ({
         </FlexRowWrapper>
         <FlexRowWrapper className="row-5">
           <FlexColumnWrapper>
-            <h5>{proposerName || 'Rahul'}'s vows</h5>
-            <p>
-              {proposerVows ||
-                'Amet minim mollit non deserunt ullamco est sit aliqua dolor do amet sint. Velit officia consequat duis enim velit mollit. Exercitation veniam consequat sunt nostrud amet.'}
-            </p>
+            <h5>{proposerName}'s vows</h5>
+            <p>{proposerVows}</p>
           </FlexColumnWrapper>
           <FlexColumnWrapper>
-            <h5>{spouseName || 'Priyanka'}'s vows</h5>
-            <p>
-              {spouseVows ||
-                'Amet minim mollit non deserunt ullamco est sit aliqua dolor do amet sint. Velit officia consequat duis enim velit mollit. Exercitation veniam consequat sunt nostrud amet.'}
-            </p>
+            <h5>{spouseName}'s vows</h5>
+            <p>{spouseVows}</p>
           </FlexColumnWrapper>
         </FlexRowWrapper>
       </FlexColumnWrapper>
