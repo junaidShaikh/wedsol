@@ -7,7 +7,7 @@ const getAccountInfo = async (accountPubKey: PublicKey) => {
   const accountInfo = await connection.getAccountInfo(accountPubKey);
 
   if (accountInfo === null) {
-    throw new Error('Error: account not found');
+    return null;
   }
 
   const endPoint = accountInfo.data.indexOf(0);
