@@ -16,6 +16,9 @@ interface State {
       spouseRing: string;
       signers: string[];
       engagementDate: string;
+      marriageDate: string;
+      proposerVows: string;
+      spouseVows: string;
     } | null;
   };
 }
