@@ -3,6 +3,7 @@ import styled from 'styled-components/macro';
 import { useHistory } from 'react-router-dom';
 import { FaPlus } from 'react-icons/fa';
 import { useSnapshot } from 'valtio';
+import millify from 'millify';
 
 import {
   state,
@@ -10,6 +11,7 @@ import {
   setProposalInfoData,
   setProposalInfoFailure,
   setProposalInfoError,
+  setAssetsData,
 } from 'state';
 
 import ConnectedAccountPill from 'components/ConnectedAccountPill';
@@ -135,7 +137,9 @@ const AssetsWrapper = styled.main`
 `;
 
 const Assets = (): JSX.Element => {
-  const [assets, setAssets] = React.useState([]);
+  const [blockChainAssetsArray, setBlockChainAssetsArray] = React.useState<any[]>([]);
+
+  const [mainProposalPubKey, setMainProposalPubKey] = React.useState('');
 
   const history = useHistory();
 
@@ -146,24 +150,23 @@ const Assets = (): JSX.Element => {
       (async () => {
         setProposalInfoLoading();
         const proposalPubKey = await getPubKeyFromSeed();
+        setMainProposalPubKey(proposalPubKey.toString());
         const accountInfo = await getAccountInfo(proposalPubKey);
-        console.log(accountInfo);
 
         if (accountInfo === null) {
-          setAssets([]);
+          setBlockChainAssetsArray([]);
           setProposalInfoFailure();
           return;
         }
 
-        setAssets(accountInfo.assets);
+        setBlockChainAssetsArray(accountInfo.assets);
 
         const { data } = await fetchIpfsJsonData(accountInfo?.extra?.substr(0, 46));
-        console.log(data);
         if (data) {
+          setAssetsData(data.assets);
           setProposalInfoData({
             ...data,
             signers: getActualSigners([accountInfo.partner1, accountInfo.partner2]),
-            assets,
           });
         } else {
           setProposalInfoFailure();
@@ -180,6 +183,7 @@ const Assets = (): JSX.Element => {
     return <FullPageSpinner />;
   }
 
+  console.log(blockChainAssetsArray);
   return (
     <AssetsWrapper>
       <ConnectedAccountPill className="connected-account-pill" />
@@ -194,15 +198,18 @@ const Assets = (): JSX.Element => {
               </SolidButton>
             </FlexRowWrapper>
             <FlexColumnWrapper>
-              {assets.length ? (
-                assets.map((_, i) => (
+              {snap.assets.length ? (
+                snap.assets.map((asset, i) => (
                   <AssetCard
                     key={i}
                     className="asset-card"
-                    assetName="New York House"
-                    assetDescription="Our House in New York"
-                    assetValue="$1.5M"
-                    assetOwnershipPercentage="50:50"
+                    assetIpfsCid={blockChainAssetsArray?.[i]?.ipfs_file_hash ?? ''}
+                    proposalPubKey={mainProposalPubKey}
+                    assetImage={asset.images[0] ?? ''}
+                    assetName={asset.assetName}
+                    assetDescription={asset.assetDescription}
+                    assetValue={millify(+asset.assetValue)}
+                    assetOwnershipPercentage={`${asset.percentageSplit}:${100 - asset.percentageSplit}`}
                   />
                 ))
               ) : (
@@ -212,7 +219,12 @@ const Assets = (): JSX.Element => {
           </FlexColumnWrapper>
           <FlexColumnWrapper className="col-2">
             <p className="current-contract">Current Contract</p>
-            <MarriageInfoCard className="marriage-info-card" showBlessButton={false} showFileDivorceButton={true} />
+            <MarriageInfoCard
+              className="marriage-info-card"
+              proposalPubKey={mainProposalPubKey}
+              showBlessButton={false}
+              showFileDivorceButton={true}
+            />
           </FlexColumnWrapper>
         </FlexRowWrapper>
       </Container>
