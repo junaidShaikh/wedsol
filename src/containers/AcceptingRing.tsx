@@ -1,5 +1,7 @@
+import * as React from 'react';
 import styled from 'styled-components/macro';
 import { useSnapshot } from 'valtio';
+import { useHistory, useParams } from 'react-router-dom';
 
 import { state } from 'state';
 
@@ -29,6 +31,16 @@ const AcceptingRingWrapper = styled.main`
 
 const AcceptingRing = (): JSX.Element => {
   const snap = useSnapshot(state);
+
+  const { proposalPubKey } = useParams<{ proposalPubKey: string }>();
+  const history = useHistory();
+
+  React.useEffect(() => {
+    if (!proposalPubKey) {
+      return history.replace('/');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <AcceptingRingWrapper>
