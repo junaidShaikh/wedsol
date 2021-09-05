@@ -42,7 +42,7 @@ const App = () => {
             <Route exact path="/engagement/:proposalPubKey" component={Engagement} />
 
             <ProtectedRoute exact path="/marriage/new" component={StartNewMarriage} />
-            <ProtectedRoute exact path="/marriage/:proposalPubKey" component={Marriage} />
+            <Route exact path="/marriage/:proposalPubKey" component={Marriage} />
             <ProtectedRoute exact path="/assets" component={Assets} />
             <ProtectedRoute exact path="/add-asset" component={AddAsset} />
             <Route exact path="/approve-asset/:proposalPubKey/:ipfsCid" component={ApproveAsset} />
