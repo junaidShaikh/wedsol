@@ -110,7 +110,7 @@ const Engagement = (): JSX.Element => {
       <Container>
         <FlexColumnWrapper>
           <FlexRowWrapper className="row-1">
-            <a href="/" target="_blank" rel="noopener noreferrer">
+            <a href={window.location.href} target="_blank" rel="noopener noreferrer">
               <IoLink />
             </a>
             <a href="/" target="_blank" rel="noopener noreferrer">
