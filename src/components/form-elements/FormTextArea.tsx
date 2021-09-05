@@ -16,6 +16,8 @@ const TextArea = styled.textarea`
   border-bottom: 1px solid #bbbbbb;
   margin-bottom: 12px;
 
+  resize: vertical;
+
   &::placeholder {
     color: rgba(6, 6, 6, 0.4);
     opacity: 1; /* Firefox */
